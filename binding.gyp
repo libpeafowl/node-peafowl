@@ -1,8 +1,8 @@
 {
   "targets": [{
-    "target_name": "napi_macros_example",
+    "target_name": "node-peafowl",
     "include_dirs": [
-      "<!(node -e \"require('../')\")"
+      "<!(node -e \"require('napi-macros')\")"
     ],
     "sources": [ "./peafowl.c" ]
   }]
