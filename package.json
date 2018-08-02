@@ -1,0 +1,11 @@
+{
+  "name": "node-peafowl",
+  "version": "1.0.0",
+  "description": "Peafowl DPI for NodeJS",
+  "dependencies": {
+    "node-gyp-build": "^3.2.2"
+  },
+  "scripts": {
+    "install": "node-gyp-build"
+  }
+}
