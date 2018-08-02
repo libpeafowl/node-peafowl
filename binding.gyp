@@ -4,6 +4,6 @@
     "include_dirs": [
       "<!(node -e \"require('../')\")"
     ],
-    "sources": [ "./index.c" ]
+    "sources": [ "./peafowl.c" ]
   }]
 }
