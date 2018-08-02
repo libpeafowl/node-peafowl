@@ -2,7 +2,7 @@
   "targets": [{
     "target_name": "node-peafowl",
     "include_dirs": [
-      "<!(node -e \"require('./include/')\")"
+      "<!(node -e \"require('napi-macros')\")"
     ],
     "sources": [ "./peafowl.c" ]
   }]
