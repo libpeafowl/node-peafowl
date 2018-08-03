@@ -16,7 +16,6 @@ const structs = sharedStructs(`
   }
 `);
 
-
 /* PCAP Parser */
 var pcapp = require('pcap-parser');
 if (process.argv[2]) {
@@ -31,9 +30,11 @@ if (process.argv[2]) {
 console.log("Peafowl Node v"+VERSION);
 counter = 0;
 
-peafowl.init();
+console.log('Initializing...');
+peafowl.pfw_init();
 
 pcap_parser.on('packet', function (raw_packet) {
+	console.log('Got a packet...');
 	counter++;
 	var header = raw_packet.header;
 	// Build PCAP Hdr Struct
@@ -43,11 +44,13 @@ pcap_parser.on('packet', function (raw_packet) {
 		newHdr.incl_len=header.capturedLength;
 		newHdr.orig_len=header.originalLength;
     	// DISSECT AND GET PROTOCOL
-    	console.log( peafowl.getProtocol( raw_packet.data, newHdr.rawBuffer ) );
+	console.log('Dissecting...');
+    	console.log( peafowl.pfw_get_protocol( raw_packet.data, newHdr.rawBuffer ) );
 });
 
 pcap_parser.on('end', function () {
-	peafowl.finish();
+	console.log('Terminating...');
+	peafowl.pfw_terminate();
 });
 
 var exit = false;
@@ -60,7 +63,7 @@ process.on('SIGINT', function() {
     console.log();
     if (exit) {
     	console.log("Exiting...");
-	      peafowl.finish();
+	      peafowl.terminate();
         process.exit();
     } else {
     	  console.log("Press CTRL-C within 2 seconds to Exit...");
