@@ -1,23 +1,25 @@
-<img src="https://i.imgur.com/jrQX0Of.gif" width=300>
+<img src="https://travis-ci.org/lmangani/node-peafowl.svg?branch=master">
+
+<img src="https://i.imgur.com/jrQX0Of.gif" width=250> 
 
 # node-Peafowl
-Native Node Bindings for the [Peafowl DPI Library](https://github.com/DanieleDeSensi/Peafowl)
+Native Node Bindings for the [Peafowl DPI Library](https://github.com/DanieleDeSensi/Peafowl) 
 
-## Peafowl
+## About
 Peafowl is a flexible and extensible DPI framework which can be used to identify the application protocols carried by IP (IPv4 and IPv6) packets and to extract and process data and metadata carried by those protocols. This module allows NodeJS projects to leverage the power of Peafowl for Deep-Packet Inspection of live and recorded network traffic.
 
-## Installation
+### Installation
 ```
 var peaFowl = require('node-peafowl')
 ```
 
-#### Custom Build
+##### Custom Build
 The install script will automatically attempt compiling peafowl and building node gyp bindings
 ```
 npm install
 ```
 
-### Functions
+#### Functions
 | function  | parameters  |  description | 
 |---|---|---|
 | pfw_init  | int  |  Initialize the library, 1 stateful, 0 stateless |
@@ -25,7 +27,7 @@ npm install
 | pfw_get_protocol  | struct pcap_pkthdr *, header  | Dissect and return Protocol ID (l7) |
 | pfw_get_protocol_pair  | struct pcap_pkthdr *, header  | Dissect and return Protocol Pair (l4,l7)  |
 
-## Usage
+### Usage
 See our fully working [Example](https://github.com/lmangani/node-peafowl/tree/master/example) using PCAP files
 
 <br/>
