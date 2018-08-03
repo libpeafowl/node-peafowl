@@ -34,7 +34,7 @@ console.log('Initializing...');
 peafowl.pfw_init();
 
 pcap_parser.on('packet', function (raw_packet) {
-	console.log('Got a packet...');
+	//console.log('Got a packet...');
 	counter++;
 	var header = raw_packet.header;
 	// Build PCAP Hdr Struct
@@ -44,8 +44,8 @@ pcap_parser.on('packet', function (raw_packet) {
 		newHdr.incl_len=header.capturedLength;
 		newHdr.orig_len=header.originalLength;
     	// DISSECT AND GET PROTOCOL
-	console.log('Dissecting...');
-    	console.log( peafowl.pfw_get_protocol( raw_packet.data, newHdr.rawBuffer ) );
+	//console.log('Dissecting...');
+    	console.log( 'Protocol:', peafowl.pfw_get_protocol( raw_packet.data, newHdr.rawBuffer ) );
 });
 
 pcap_parser.on('end', function () {
