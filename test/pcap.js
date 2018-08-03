@@ -6,13 +6,16 @@ var VERSION = "1.0.0";
 var peafowl = require('../peafowl.js');
 
 /* PCAP Header  */
-var Struct = require('ref-struct');
-var pcap_pkthdr = Struct({
-	  'ts_sec': 'uint64', 
-	  'ts_usec': 'uint64',
-	  'incl_len': 'uint32',
-	  'orig_len': 'uint32'
-});
+const sharedStructs = require('shared-structs');
+const structs = sharedStructs(`
+  struct pcap {
+    uint64_t ts_sec;
+    uint64_t ts_usec;
+    uint64_t incl_len;
+    uint64_t orig_len;
+  }
+`);
+
 
 /* PCAP Parser */
 var pcapp = require('pcap-parser');
@@ -33,14 +36,14 @@ peafowl.init();
 pcap_parser.on('packet', function (raw_packet) {
 	counter++;
 	var header = raw_packet.header;
-	  // Build PCAP Hdr Struct
-	  var newHdr = new pcap_pkthdr();
+	// Build PCAP Hdr Struct
+	var newHdr = structs.pcap();
 		newHdr.ts_sec=header.timestampSeconds;
 		newHdr.ts_usec=header.timestampMicroseconds;
 		newHdr.incl_len=header.capturedLength;
 		newHdr.orig_len=header.originalLength;
-    // DISSECT AND GET PROTOCOL
-    console.log( peafowl.getProtocol( raw_packet.data, newHdr.ref() ) );
+    	// DISSECT AND GET PROTOCOL
+    	console.log( peafowl.getProtocol( raw_packet.data, newHdr.rawBuffer ) );
 });
 
 pcap_parser.on('end', function () {
@@ -49,8 +52,8 @@ pcap_parser.on('end', function () {
 
 var exit = false;
 process.on('exit', function() {
-		exports.callback;
-		console.log('Total Packets: '+counter);
+	exports.callback;
+	console.log('Total Packets: '+counter);
 });
 
 process.on('SIGINT', function() {
