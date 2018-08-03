@@ -14,6 +14,7 @@
 #define MAX_IPv6_ACTIVE_FLOWS 500000
 
 dpi_library_state_t* state; // the state
+
 struct pcap_pkthdr* header;
 
 // init state
@@ -60,6 +61,23 @@ int get_protocol(char* packet, struct pcap_pkthdr *header)
   return ID_protocol;
 }
 
+// identify protocols
+int dpi_identification()
+{
+  dpi_identification_result_t *r;
+
+  r = malloc(sizeof(dpi_identification_result_t));
+  if(r == NULL) {
+    fprintf(stderr, " malloc() error");
+    exit(-1);
+  }
+  
+  r = dpi_stateful_identify_application_protocol(state, packet+ip_offset, 
+						 header.caplen-ip_offset, time(NULL))
+
+    return r.protocol.l7prot; // return APP proto number
+}
+
 // terminate
 void terminate()
 {
@@ -92,6 +110,7 @@ NAPI_METHOD(pfw_terminate) {
   terminate();
   return NULL;
 }
+
 
 /* ### FOR TEST ### */
 NAPI_METHOD(test_mul) {
