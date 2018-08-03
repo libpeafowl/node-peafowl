@@ -18,17 +18,18 @@ dpi_library_state_t* state; // the state
 struct pcap_pkthdr* header;
 
 // init state
-int init(int flag)
+int init()
 {
-  if(flag != 0 || flag != 1) {
-    fprintf(stderr, "Parameters different to 0 or 1. No init()\n");
-    return -1; // ERROR
-  }
+  printf("INSIDE INIT!!!!!\n");
+  /* if(flag != 0 || flag != 1) { */
+  /*   fprintf(stderr, "Parameters different to 0 or 1. No init()\n"); */
+  /*   return -1; // ERROR */
+  /* } */
   
-  if(state == 0){ }// TODO stateless
-  else {
-    state = dpi_init_stateful(SIZE_IPv4_FLOW_TABLE, SIZE_IPv6_FLOW_TABLE, MAX_IPv4_ACTIVE_FLOWS, MAX_IPv6_ACTIVE_FLOWS);
-  }
+  /* if(state == 0){ }// TODO stateless */
+  /* else { */
+  state = dpi_init_stateful(SIZE_IPv4_FLOW_TABLE, SIZE_IPv6_FLOW_TABLE, MAX_IPv4_ACTIVE_FLOWS, MAX_IPv6_ACTIVE_FLOWS);
+  /* } */
 
   if(state == NULL) {
     fprintf(stderr, "dpi_init_stateful ERROR\n");
@@ -72,9 +73,9 @@ void terminate()
 
 NAPI_METHOD(pfw_init) {
   int r;
-  NAPI_ARGV(1);
-  NAPI_ARGV_INT32(number, 1);
-  r = init(number);
+  /* NAPI_ARGV(1); */
+  /* NAPI_ARGV_INT32(number, 1); */
+  r = init();
   NAPI_RETURN_INT32(r);
 }
 
