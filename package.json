@@ -9,6 +9,7 @@
   },
   "scripts": {
     "preinstall": "./compile.sh",
-    "postinstall": "node-gyp-build"
+    "postinstall": "node-gyp-build",
+    "test": "cd example && npm install && cd .. && node example/pcap.js example/pcap/lamernews.pcap"
   }
 }

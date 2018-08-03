@@ -47,7 +47,6 @@ int get_protocol(char* packet, struct pcap_pkthdr *header)
 
   r = dpi_stateful_identify_application_protocol(state, (const u_char*) packet+sizeof(struct ether_header),
 						 header->len-sizeof(struct ether_header), time(NULL));
-
   if(r.protocol.l4prot == IPPROTO_UDP){
     if(r.protocol.l7prot < DPI_NUM_UDP_PROTOCOLS){
       /* stats.parsed_packets++; */
@@ -60,6 +59,34 @@ int get_protocol(char* packet, struct pcap_pkthdr *header)
     }
   }
   return ID_protocol;
+}
+
+// identify protocols
+char * get_protocol_pair(char* packet, struct pcap_pkthdr *header)
+{
+  dpi_identification_result_t r;
+  char * res;
+  res = calloc(2,  sizeof(char));
+  memset(res,0,2);
+
+  r = dpi_stateful_identify_application_protocol(state, (const u_char*) packet+sizeof(struct ether_header),
+						 header->len-sizeof(struct ether_header), time(NULL));
+  if(r.protocol.l4prot == IPPROTO_UDP){
+    res[0] = IPPROTO_UDP;
+    if(r.protocol.l7prot < DPI_NUM_UDP_PROTOCOLS){
+      /* stats.parsed_packets++; */
+      res[1] = r.protocol.l7prot;
+      return res;
+    }
+  } else if(r.protocol.l4prot == IPPROTO_TCP){
+    res[0] = IPPROTO_TCP;
+    if(r.protocol.l7prot < DPI_NUM_TCP_PROTOCOLS){
+      /* stats.parsed_packets++; */
+      res[1] = DPI_NUM_UDP_PROTOCOLS + r.protocol.l7prot;
+      return res;
+    }
+  }
+  return res;
 }
 
 // terminate
@@ -89,6 +116,16 @@ NAPI_METHOD(pfw_get_protocol) {
   NAPI_RETURN_INT32(res);
 }
 
+NAPI_METHOD(pfw_get_protocol_pair) {
+  char *res;
+  /* res = malloc(2 * sizeof(int)); */
+  NAPI_ARGV(2);
+  NAPI_ARGV_BUFFER(packet, 0);
+  NAPI_ARGV_BUFFER_CAST(struct pcap_pkthdr *, header, 1);
+  res = get_protocol_pair(packet, header);
+  NAPI_RETURN_UTF8(res, 2);
+}
+
 
 NAPI_METHOD(pfw_terminate) {
   terminate();
@@ -110,6 +147,7 @@ NAPI_METHOD(test_mul) {
 NAPI_INIT() {
   NAPI_EXPORT_FUNCTION(pfw_init);
   NAPI_EXPORT_FUNCTION(pfw_get_protocol);
+  NAPI_EXPORT_FUNCTION(pfw_get_protocol_pair);
   NAPI_EXPORT_FUNCTION(pfw_terminate);
   NAPI_EXPORT_FUNCTION(test_mul);
 }

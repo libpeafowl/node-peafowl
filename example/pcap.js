@@ -5,6 +5,28 @@
 var VERSION = "1.0.0";
 var peafowl = require('../peafowl.js');
 
+/* PEAFOWL PROTO MAPS */
+var l4_proto = { 17: 'UDP', 6: 'TCP' };
+var l7_proto = {
+	17: [
+	    "DNS",
+	    "MDNS",
+	    "DHCP",
+	    "DHCPv6",
+	    "NTP",
+	    "SIP",
+	    "RTP",
+	    "SKYPE"
+	],
+	6: [
+	    "HTTP",
+	    "BGP",
+	    "SMTP",
+	    "POP3",
+	    "SSL"
+	]
+};
+
 /* PCAP Header  */
 const sharedStructs = require('shared-structs');
 const structs = sharedStructs(`
@@ -34,7 +56,6 @@ console.log('Initializing...');
 peafowl.pfw_init();
 
 pcap_parser.on('packet', function (raw_packet) {
-	//console.log('Got a packet...');
 	counter++;
 	var header = raw_packet.header;
 	// Build PCAP Hdr Struct
@@ -44,8 +65,10 @@ pcap_parser.on('packet', function (raw_packet) {
 		newHdr.incl_len=header.capturedLength;
 		newHdr.orig_len=header.originalLength;
     	// DISSECT AND GET PROTOCOL
-	//console.log('Dissecting...');
-    	console.log( 'Protocol:', peafowl.pfw_get_protocol( raw_packet.data, newHdr.rawBuffer ) );
+    	var tmpprt = new Buffer(peafowl.pfw_get_protocol_pair( raw_packet.data, newHdr.rawBuffer ));
+    	if (tmpprt[0] > 0) {
+		console.log( 'L4:', l4_proto[tmpprt[0]], 'L7:', l7_proto[tmpprt[0]][tmpprt[1]] || tmpprt[1] );
+        }
 });
 
 pcap_parser.on('end', function () {
