@@ -4,17 +4,17 @@
 Native Node Bindings for the [Peafowl DPI Library](https://github.com/DanieleDeSensi/Peafowl)
 
 ## Peafowl
-Peafowl is a flexible and extensible DPI framework which can be used to identify the application protocols carried by IP (IPv4 and IPv6) packets and to extract and process data and metadata carried by those protocols.
-
-## Build
-The build process will automatically attempt compiling peafowl and gyp bindings
-```
-npm install
-```
+Peafowl is a flexible and extensible DPI framework which can be used to identify the application protocols carried by IP (IPv4 and IPv6) packets and to extract and process data and metadata carried by those protocols. This module allows NodeJS projects to leverage the power of Peafowl for Deep-Packet Inspection of live and recorded network traffic.
 
 ## Installation
 ```
 var peaFowl = require('node-peafowl')
+```
+
+#### Custom Build
+The install script will automatically attempt compiling peafowl and building node gyp bindings
+```
+npm install
 ```
 
 ### Functions
@@ -34,3 +34,7 @@ See our fully working [Example] using PCAP sources
 Peafowl has been mainly developed by [Daniele De Sensi](https://github.com/DanieleDeSensi)
 
 Node-Peafowl is sponsored by [QXIP BV](http://qxip.net)
+
+If you use Peafowl or Node-Peafowl for scientific purposes, please cite the following paper:
+
+```"Deep Packet Inspection on Commodity Hardware using FastFlow", M. Danelutto, L. Deri, D. De Sensi, M. Torquati```
