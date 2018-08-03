@@ -1,5 +1,7 @@
 #include <node_api.h>
 #include <napi-macros.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include "peafowl_lib/src/api.h"
 
 #define SIZE_IPv4_FLOW_TABLE 32767
@@ -10,7 +12,7 @@
 dpi_library_state_t* state; // the state
 
 // init state
-int init_state(int flag)
+int init(int flag)
 {
   int ret;
 
@@ -34,20 +36,26 @@ int init_state(int flag)
 }
 
 // identify protocols
-int dpi_identification()
-{
-  dpi_identification_result_t *r;
+int get_protocol(const u_char* packet, struct pcap_pkthdr *header){
 
-  r = malloc(sizeof(dpi_identification_result_t));
-  if(r == NULL) {
-    fprintf(stderr, " malloc() error");
-    exit(-1);
+  dpi_identification_result_t r;
+  int ID_protocol = -1;
+
+  r = dpi_stateful_identify_application_protocol(state, packet+sizeof(struct ether_header),
+						 header->len-sizeof(struct ether_header), time(NULL));
+
+  if(r.protocol.l4prot == IPPROTO_UDP){
+    if(r.protocol.l7prot < DPI_NUM_UDP_PROTOCOLS){
+      /* stats.parsed_packets++; */
+      return r.protocol.l7prot;
+    }
+  } else if(r.protocol.l4prot == IPPROTO_TCP){
+    if(r.protocol.l7prot < DPI_NUM_TCP_PROTOCOLS){
+      /* stats.parsed_packets++; */
+      return DPI_NUM_UDP_PROTOCOLS + r.protocol.l7prot;
+    }
   }
-  
-  r = dpi_stateful_identify_application_protocol(state, packet+ip_offset, 
-						 header.caplen-ip_offset, time(NULL))
-
-    return r.protocol.l7prot; // return APP proto number
+  return ID_protocol;
 }
 
 // terminate
@@ -57,27 +65,29 @@ void terminate()
 }
 
 
-NAPI_METHOD(init_state) {
+NAPI_METHOD(pfw_init_state) {
 
   int r;
   
   NAPI_ARGV(1);
   NAPI_ARGV_INT32(number, 1);
-  r = init_state();
+  r = init(number);
   NAPI_RETURN_INT32(r);
 }
 
 
-NAPI_METHOD(dpi_identification) {
+NAPI_METHOD(pfw_get_protocol) {
 
   int res;
-  
-  res = dpi_identification();
+  NAPI_ARGV(2);
+  NAPI_ARGV_BUFFER(packet, 0);
+  NAPI_ARGV_BUFFER_CAST(struct pcap_pkthdr *, header, 1);
+  res = get_protocol(packet, header);
   NAPI_RETURN_INT32(number);
 }
 
 
-NAPI_METHOD(terminate) {
+NAPI_METHOD(pfw_terminate) {
   
   terminate();
   return NULL;
@@ -85,7 +95,7 @@ NAPI_METHOD(terminate) {
 
 
 NAPI_INIT() {
-  NAPI_EXPORT_FUNCTION(init_state);
-  NAPI_EXPORT_FUNCTION(dpi_identification);
-  NAPI_EXPORT_FUNCTION(terminate);
+  NAPI_EXPORT_FUNCTION(pfw_init);
+  NAPI_EXPORT_FUNCTION(pfw_get_protocol);
+  NAPI_EXPORT_FUNCTION(pfw_terminate);
 }
