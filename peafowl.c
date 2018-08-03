@@ -2,6 +2,10 @@
 #include <napi-macros.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <net/ethernet.h>
+#include <netinet/in.h>
+#include <pcap.h>
+#include <time.h>
 #include "peafowl_lib/src/api.h"
 
 #define SIZE_IPv4_FLOW_TABLE 32767
@@ -10,12 +14,11 @@
 #define MAX_IPv6_ACTIVE_FLOWS 500000
 
 dpi_library_state_t* state; // the state
+struct pcap_pkthdr* header;
 
 // init state
 int init(int flag)
 {
-  int ret;
-
   if(flag != 0 || flag != 1) {
     fprintf(stderr, "Parameters different to 0 or 1. No init()\n");
     exit(-1); // ERROR
@@ -31,17 +34,16 @@ int init(int flag)
     exit(-1); // ERROR
   }
 
-  return 0;
-  
+  return 0; 
 }
 
 // identify protocols
-int get_protocol(const u_char* packet, struct pcap_pkthdr *header){
-
+int get_protocol(char* packet, struct pcap_pkthdr *header)
+{
   dpi_identification_result_t r;
   int ID_protocol = -1;
 
-  r = dpi_stateful_identify_application_protocol(state, packet+sizeof(struct ether_header),
+  r = dpi_stateful_identify_application_protocol(state, (const u_char*) packet+sizeof(struct ether_header),
 						 header->len-sizeof(struct ether_header), time(NULL));
 
   if(r.protocol.l4prot == IPPROTO_UDP){
@@ -65,10 +67,10 @@ void terminate()
 }
 
 
-NAPI_METHOD(pfw_init_state) {
+/*** NAPI METHODS ***/
 
+NAPI_METHOD(pfw_init) {
   int r;
-  
   NAPI_ARGV(1);
   NAPI_ARGV_INT32(number, 1);
   r = init(number);
@@ -77,20 +79,28 @@ NAPI_METHOD(pfw_init_state) {
 
 
 NAPI_METHOD(pfw_get_protocol) {
-
   int res;
   NAPI_ARGV(2);
   NAPI_ARGV_BUFFER(packet, 0);
   NAPI_ARGV_BUFFER_CAST(struct pcap_pkthdr *, header, 1);
   res = get_protocol(packet, header);
-  NAPI_RETURN_INT32(number);
+  NAPI_RETURN_INT32(res);
 }
 
 
 NAPI_METHOD(pfw_terminate) {
-  
   terminate();
   return NULL;
+}
+
+/* ### FOR TEST ### */
+NAPI_METHOD(test_mul) {
+  NAPI_ARGV(1)
+  NAPI_ARGV_INT32(number, 0)
+
+  number *= 2;
+
+  NAPI_RETURN_INT32(number)
 }
 
 
@@ -98,4 +108,5 @@ NAPI_INIT() {
   NAPI_EXPORT_FUNCTION(pfw_init);
   NAPI_EXPORT_FUNCTION(pfw_get_protocol);
   NAPI_EXPORT_FUNCTION(pfw_terminate);
+  NAPI_EXPORT_FUNCTION(test_mul);
 }
