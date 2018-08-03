@@ -22,7 +22,7 @@ int init(int flag)
 {
   if(flag != 0 || flag != 1) {
     fprintf(stderr, "Parameters different to 0 or 1. No init()\n");
-    exit(-1); // ERROR
+    return -1; // ERROR
   }
   
   if(state == 0){ }// TODO stateless
@@ -32,7 +32,7 @@ int init(int flag)
 
   if(state == NULL) {
     fprintf(stderr, "dpi_init_stateful ERROR\n");
-    exit(-1); // ERROR
+    return -1; // ERROR
   }
 
   return 0; 
