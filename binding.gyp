@@ -1,6 +1,6 @@
 {
   "targets": [{
-    "target_name": "node-peafowl",
+    "target_name": "peafowl",
     "include_dirs": [
       "<!(node -e \"require('napi-macros')\")"
     ],

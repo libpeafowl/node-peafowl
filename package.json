@@ -7,6 +7,6 @@
     "node-gyp-build": "^3.2.2"
   },
   "scripts": {
-    "install": "node-gyp-build"
+    "postinstall": "node-gyp-build"
   }
 }
