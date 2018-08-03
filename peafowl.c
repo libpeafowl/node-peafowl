@@ -20,7 +20,6 @@ struct pcap_pkthdr* header;
 // init state
 int init()
 {
-  printf("INSIDE INIT!!!!!\n");
   /* if(flag != 0 || flag != 1) { */
   /*   fprintf(stderr, "Parameters different to 0 or 1. No init()\n"); */
   /*   return -1; // ERROR */
@@ -39,7 +38,7 @@ int init()
   return 0; 
 }
 
-// identify protocols
+// identify protocols l7
 int get_protocol(char* packet, struct pcap_pkthdr *header)
 {
   dpi_identification_result_t r;
@@ -61,7 +60,7 @@ int get_protocol(char* packet, struct pcap_pkthdr *header)
   return ID_protocol;
 }
 
-// identify protocols
+// identify protocols pairs [l7,l4]
 char * get_protocol_pair(char* packet, struct pcap_pkthdr *header)
 {
   dpi_identification_result_t r;
