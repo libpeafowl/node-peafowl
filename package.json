@@ -1,6 +1,6 @@
 {
   "name": "node-peafowl",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Peafowl DPI for NodeJS",
   "dependencies": {
     "napi-macros": "^1.4.1",
@@ -11,5 +11,26 @@
     "preinstall": "./compile.sh",
     "postinstall": "node-gyp-build",
     "test": "cd example && npm install && cd .. && node example/pcap.js example/pcap/lamernews.pcap"
-  }
+  },
+  "main": "peafowl.js",
+  "directories": {
+    "example": "example"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lmangani/node-peafowl.git"
+  },
+  "keywords": [
+    "peafowl",
+    "dpi",
+    "packet",
+    "inspection",
+    "binding"
+  ],
+  "author": "L. Mangani <lorenzo.mangani@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lmangani/node-peafowl/issues"
+  },
+  "homepage": "https://github.com/lmangani/node-peafowl#readme"
 }
