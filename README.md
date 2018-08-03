@@ -26,15 +26,21 @@ npm install
 | pfw_get_protocol_pair  | struct pcap_pkthdr *, header  | Dissect and return Protocol Pair (l4,l7)  |
 
 ## Usage
-See our fully working [Example] using PCAP sources
+See our fully working [Example](https://github.com/lmangani/node-peafowl/tree/master/example) using PCAP files
 
 
-### Credits
+### Credits & Acknowledgements
 
 Peafowl has been mainly developed by [Daniele De Sensi](https://github.com/DanieleDeSensi)
 
-Node-Peafowl is sponsored by [QXIP BV](http://qxip.net)
+Node-Peafowl is developed by [L. Mangani](https://github.com/lmangani), [M. Campus](https://github.com/kYroL01) using the awesome [NAPI-macros](https://github.com/mafintosh/napi-macros) by [Mathias Buus](https://github.com/mafintosh)
+
+
+-------------
 
 If you use Peafowl or Node-Peafowl for scientific purposes, please cite the following paper:
 
 ```"Deep Packet Inspection on Commodity Hardware using FastFlow", M. Danelutto, L. Deri, D. De Sensi, M. Torquati```
+
+###### This Project is sponsored by [QXIP BV](http://qxip.net)
+
