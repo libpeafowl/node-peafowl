@@ -1,9 +1,13 @@
-<img src="https://travis-ci.org/lmangani/node-peafowl.svg?branch=master">
+
 
 <img src="https://i.imgur.com/jrQX0Of.gif" width=250> 
 
 # node-Peafowl
 Native Node Bindings for the [Peafowl DPI Library](https://github.com/DanieleDeSensi/Peafowl) 
+
+[![Build Status](https://travis-ci.org/lmangani/node-peafowl.svg?branch=master)](https://travis-ci.org/lmangani/node-peafowl)
+[![dependencies Status](https://david-dm.org/lmangani/node-peafowl/status.svg)](https://david-dm.org/lmangani/node-peafowl)
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/lmangani/node-peafowl/issues)
 
 ## About
 Peafowl is a flexible and extensible DPI framework which can be used to identify the application protocols carried by IP (IPv4 and IPv6) packets and to extract and process data and metadata carried by those protocols. This module allows NodeJS projects to leverage the power of Peafowl for Deep-Packet Inspection of live and recorded network traffic.
