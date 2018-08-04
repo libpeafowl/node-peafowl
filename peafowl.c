@@ -65,8 +65,8 @@ char * get_protocol_pair(char* packet, struct pcap_pkthdr *header)
 {
   dpi_identification_result_t r;
   char * res;
-  res = calloc(2,  sizeof(char));
-  memset(res,0,2);
+  res = malloc(2 * sizeof(char));
+  memset(res,-1,2);
 
   r = dpi_stateful_identify_application_protocol(state, (const u_char*) packet+sizeof(struct ether_header),
 						 header->len-sizeof(struct ether_header), time(NULL));
