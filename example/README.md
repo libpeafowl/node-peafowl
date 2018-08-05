@@ -1,6 +1,6 @@
 # Test
 ```
 npm install
-node pcap.js ./pcap/lamernews.pcap
+node pcap.js ./pcap/http.pcap
 ```
 
