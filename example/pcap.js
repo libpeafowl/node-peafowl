@@ -5,24 +5,6 @@
 var VERSION = "1.0.0";
 var peafowl = require('../peafowl.js');
 
-/* PEAFOWL PROTO MAPS */
-var l4_proto = { 17: 'UDP', 6: 'TCP', 0: '???' };
-var l7_proto = [
-    "DNS",
-    "MDNS",
-    "DHCP",
-    "DHCPv6",
-    "NTP",
-    "SIP",
-    "RTP",
-    "SKYPE",
-    "HTTP",
-    "BGP",
-    "SMTP",
-    "POP3",
-    "SSL"
-];
-
 var protoL4 = ""
 var protoL7 = ""
 
