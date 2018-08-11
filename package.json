@@ -1,6 +1,6 @@
 {
   "name": "node-peafowl",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Peafowl DPI for NodeJS",
   "dependencies": {
     "napi-macros": "^1.4.1",
@@ -8,7 +8,7 @@
     "shared-structs": "^1.3.3"
   },
   "scripts": {
-    "preinstall": "./compile.sh && ./node_modules/prebuildify/bin.js --napi",
+    "preinstall": "./compile.sh",
     "install": "node-gyp-build",
     "test": "cd example && npm install && cd .. && node example/pcap.js example/pcap/http.pcap"
   },
