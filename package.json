@@ -1,6 +1,6 @@
 {
   "name": "node-peafowl",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Peafowl DPI for NodeJS",
   "dependencies": {
     "napi-macros": "^1.4.1",
@@ -8,8 +8,8 @@
     "shared-structs": "^1.3.3"
   },
   "scripts": {
-    "preinstall": "./compile.sh",
-    "postinstall": "node-gyp-build",
+    "preinstall": "./compile.sh && ./node_modules/prebuildify/bin.js --napi",
+    "install": "node-gyp-build",
     "test": "cd example && npm install && cd .. && node example/pcap.js example/pcap/http.pcap"
   },
   "main": "peafowl.js",
@@ -32,5 +32,8 @@
   "bugs": {
     "url": "https://github.com/lmangani/node-peafowl/issues"
   },
-  "homepage": "https://github.com/lmangani/node-peafowl#readme"
+  "homepage": "https://github.com/lmangani/node-peafowl#readme",
+  "devDependencies": {
+    "prebuildify": "^2.7.0"
+  }
 }
