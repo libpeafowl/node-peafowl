@@ -26,10 +26,11 @@ npm install
 #### Functions
 | function  | parameters  |  description | 
 |---|---|---|
-| pfw_init  | int  |  Initialize the library, 1 stateful, 0 stateless |
-|  pfw_terminate | void  | Teardown the library  |
-| pfw_get_protocol  | struct pcap_pkthdr *, header  | Dissect and return Protocol ID (l7) |
-| pfw_get_protocol_pair  | struct pcap_pkthdr *, header  | Dissect and return Protocol Pair (l4,l7)  |
+| pfw_init  | void  |  Initialize the library for statefull env |
+|  pfw_terminate | void  | Teardown the library |
+| pfw_get_protocol_l4  | struct pcap_pkthdr *, header  | Dissect and return Protocol name as char * (l4) |
+| pfw_get_protocol_l7  | struct pcap_pkthdr *, header  | Dissect and return Protocol name as char * (l7) |
+| pfw_get_protocol_pair  | struct pcap_pkthdr *, header  | Dissect and return Protocol Pair (l4,l7) |
 
 ### Usage
 See our fully working [Example](https://github.com/lmangani/node-peafowl/tree/master/example) using PCAP files
