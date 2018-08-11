@@ -1,6 +1,6 @@
 {
   "name": "node-peafowl",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Peafowl DPI for NodeJS",
   "dependencies": {
     "napi-macros": "^1.4.1",

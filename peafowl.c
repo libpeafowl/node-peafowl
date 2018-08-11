@@ -42,6 +42,10 @@ char * get_protocol_l7(char* packet, struct pcap_pkthdr *header)
 		       header->len-sizeof(struct ether_header), time(NULL));
 
   name = calloc(BUFF, sizeof(char));
+  if(name == NULL) {
+    fprintf(stderr, "calloc ERROR\n");
+    return NULL; // ERROR
+  }
   name = dpi_get_protocol_string(r.protocol.l7prot);
 
   return name;    
@@ -58,6 +62,10 @@ char * get_protocol_l4(char* packet, struct pcap_pkthdr *header)
 		       header->len-sizeof(struct ether_header), time(NULL));
 
   name = calloc(BUFF, sizeof(char));
+  if(name == NULL){
+    fprintf(stderr, "calloc ERROR\n");
+    return NULL; // ERROR
+  }
 
   // Check for L4
   if(r.protocol.l4prot == IPPROTO_UDP){
@@ -76,7 +84,12 @@ char * get_protocol_pair(char* packet, struct pcap_pkthdr *header)
 {
   dpi_identification_result_t r;
   char * res;
+  
   res = malloc(2 * sizeof(char));
+  if(res == NULL){
+    fprintf(stderr, "malloc ERROR\n");
+    return NULL; // ERROR
+  }
   memset(res,-1,2);
 
   r = dpi_get_protocol(state, (const u_char*) packet+sizeof(struct ether_header),
@@ -118,7 +131,6 @@ NAPI_METHOD(pfw_init) {
 
 NAPI_METHOD(pfw_get_protocol_l7) {
   char *name;
-  /* name = calloc(BUFF, sizeof(char)); */
   NAPI_ARGV(2);
   NAPI_ARGV_BUFFER(packet, 0);
   NAPI_ARGV_BUFFER_CAST(struct pcap_pkthdr *, header, 1);
@@ -128,7 +140,6 @@ NAPI_METHOD(pfw_get_protocol_l7) {
 
 NAPI_METHOD(pfw_get_protocol_l4) {
   char *name;
-  /* name = calloc(BUFF, sizeof(char)); */
   NAPI_ARGV(2);
   NAPI_ARGV_BUFFER(packet, 0);
   NAPI_ARGV_BUFFER_CAST(struct pcap_pkthdr *, header, 1);
