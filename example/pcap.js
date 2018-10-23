@@ -57,7 +57,7 @@ pcap_parser.on('packet', function (raw_packet) {
     newHdr.orig_len = header.originalLength;
 
     // DISSECT AND GET PROTOCOL
-    protoL7 = new Buffer(peafowl.bind_pfw_get_protocol_l7( raw_packet.data, newHdr.rawBuffer, LinkType ));
+    protoL7 = new Buffer(peafowl.bind_pfwl_get_protocol_l7( raw_packet.data, newHdr.rawBuffer, LinkType ));
     // protoL4 = new Buffer(peafowl.pfw_get_protocol_l4( raw_packet.data, newHdr.rawBuffer ));
 
     // From object to String
