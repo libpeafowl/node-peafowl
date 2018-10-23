@@ -41,13 +41,11 @@ console.log('Initializing...');
 peafowl.bind_pfwl_init();
 
 // L2 type
-var c = 0;
 var pcap = require('pcap');
 var pcap_session = pcap.createOfflineSession(process.argv[2], "");
 var LinkType = -1;
 pcap_session.on('packet', function (raw_packet) {
     var packet = pcap.decode.packet(raw_packet);
-    console.log('C = ', ++c);
     LinkType = packet.link_type;
     switch (LinkType) {
     case "LINKTYPE_ETHERNET":
@@ -88,7 +86,7 @@ pcap_parser.on('packet', function (raw_packet) {
     // protoL4 = protoL4.toString();
 
     // console.log( 'L4:', protoL4, 'L7:', protoL7 );
-    console.log( 'L7:', protoL7 );
+    console.log("L7: ", protoL7);
     // var tmpStats = packetStats.bytes[ protoL4 + '.' + protoL7 ];
     var tmpStats = packetStats.bytes[ protoL7 ];
     if (!tmpStats) {
@@ -112,12 +110,12 @@ pcap_parser.on('end', function () {
 var exit = false;
 process.on('exit', function() {
     exports.callback;
-    console.log('Total Packets: '+counter);
+    console.log('Total Packets: '+ counter);
     for (var key in packetStats.bytes) {
-	var id = key.split('.');
-	console.log("L4: " + id[0] + "\t L7: " + id[1]
-		    + '\t Count: ' + packetStats.count[key]
-		    + "\t Size: " + formatBytes(packetStats.bytes[key]));
+	    var id = key.split('.');
+	    console.log('L7: ' + id[0]
+		            + '\t Count: ' + packetStats.count[key]
+		            + '\t Size: ' + formatBytes(packetStats.bytes[key]));
     }
     console.table(packetStats);
 });

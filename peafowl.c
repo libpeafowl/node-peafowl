@@ -78,27 +78,13 @@ char* get_protocol_name_l7(char* packet, struct pcap_pkthdr* header, int link_ty
     // call dissection from L2
     pfwl_status_t status = pfwl_dissect_from_L2(state, (const u_char*) packet,
                                                 header->caplen, time(NULL), dlt, &r);
-    if(status == PFWL_STATUS_OK) {
+
+    if(status >= PFWL_STATUS_OK) {
         name = pfwl_get_L7_protocol_name(r.l7.protocol);
         return name;
     }
-    else return NULL;
+    else return "ERROR";
 }
-
-// dissect pachet and return the L4 protocol name
-/* char* get_protocol_name_l7(char* packet, struct pcap_pkthdr* header, int link_type) */
-/* { */
-/*     char* name = NULL; */
-/*     pfwl_dissection_info_t* r = NULL; */
-/*     pfwl_status_t status = pfwl_dissect_from_L2(state, (const u_char*) packet, */
-/*                                                 header->caplen, time(NULL), link_type, r); */
-/*     if(status == PFWL_STATUS_OK) { */
-/*         name = pfwl_get_L4_protocol_name(r->l4.protocol); */
-/*         return name; */
-/*     } */
-/*     else return NULL; */
-/* } */
-
 
 // terminate
 void terminate()
@@ -125,16 +111,6 @@ NAPI_METHOD(bind_pfwl_get_protocol_l7) {
   NAPI_RETURN_STRING(name);
 }
 
-/* NAPI_METHOD(bind_pfwl_get_protocol_l4) { */
-/*   char *name; */
-/*   NAPI_ARGV(2); */
-/*   NAPI_ARGV_BUFFER(packet, 0); */
-/*   NAPI_ARGV_BUFFER_CAST(struct pcap_pkthdr *, header, 1); */
-/*   NAPI_ARGV_INT32(link_type, 2); */
-/*   name = get_protocol_name_l4(packet, header); */
-/*   NAPI_RETURN_STRING(name); */
-/* } */
-
 NAPI_METHOD(bind_pfwl_terminate) {
   terminate();
   return NULL;
@@ -151,11 +127,9 @@ NAPI_METHOD(test_mul) {
   NAPI_RETURN_INT32(number)
 }
 
-
 NAPI_INIT() {
   NAPI_EXPORT_FUNCTION(bind_pfwl_init);
   NAPI_EXPORT_FUNCTION(bind_pfwl_get_protocol_l7);
-  // NAPI_EXPORT_FUNCTION(bind_pfwl_get_protocol_l4);
   NAPI_EXPORT_FUNCTION(bind_pfwl_terminate);
   NAPI_EXPORT_FUNCTION(test_mul);
 }
