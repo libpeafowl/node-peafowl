@@ -41,11 +41,13 @@ console.log('Initializing...');
 peafowl.bind_pfwl_init();
 
 // L2 type
+var c = 0;
 var pcap = require('pcap');
 var pcap_session = pcap.createOfflineSession(process.argv[2], "");
 var LinkType = -1;
 pcap_session.on('packet', function (raw_packet) {
     var packet = pcap.decode.packet(raw_packet);
+    console.log('C = ', ++c);
     LinkType = packet.link_type;
     switch (LinkType) {
     case "LINKTYPE_ETHERNET":
