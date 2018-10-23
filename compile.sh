@@ -6,7 +6,7 @@ if [ ! -d "peafowl_lib" ]; then
   echo "Compiling Peafowl..."
   cd peafowl_lib
   mkdir build && cd build
-  cmake ../ && make && cd ../../
+  cmake ../ && make && make install && cd ../../
   echo $PWD
   cp peafowl_lib/build/src/libpeafowl.* ./include/
   echo "Peafowl lib ready!"
