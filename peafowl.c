@@ -69,21 +69,25 @@ pfwl_dissection_info_t* parse_packet_l4(char* packet, uint32_t l2_off, uint32_t 
 *********************************************************************************************/
 
 // dissect pachet and return the L7 protocol name
-char* get_protocol_name_l7(char* packet, struct pcap_pkthdr* header, uint32_t link_type)
+char* get_protocol_name_l7(char* packet, struct pcap_pkthdr* header, int link_type)
 {
     char* name = NULL;
-    pfwl_dissection_info_t* r = NULL;
+    pfwl_dissection_info_t r;
     pfwl_status_t status = pfwl_dissect_from_L2(state, (const u_char*) packet,
-                                                header->caplen, time(NULL), link_type, r);
+                                                header->caplen, time(NULL), link_type, &r);
+    printf("STATUS = %d\n", status);
+    printf("LT = %d\n", link_type);
     if(status == PFWL_STATUS_OK) {
-        name = pfwl_get_L7_protocol_name(r->l7.protocol);
+        printf("BEFORE\n");
+        name = pfwl_get_L7_protocol_name(r.l7.protocol);
+        printf("NAME = %s\n", name);
         return name;
     }
     else return NULL;
 }
 
 // dissect pachet and return the L4 protocol name
-/* char* get_protocol_name_l7(char* packet, struct pcap_pkthdr* header, uint32_t link_type) */
+/* char* get_protocol_name_l7(char* packet, struct pcap_pkthdr* header, int link_type) */
 /* { */
 /*     char* name = NULL; */
 /*     pfwl_dissection_info_t* r = NULL; */
@@ -117,7 +121,7 @@ NAPI_METHOD(bind_pfwl_get_protocol_l7) {
   NAPI_ARGV(3);
   NAPI_ARGV_BUFFER(packet, 0);
   NAPI_ARGV_BUFFER_CAST(struct pcap_pkthdr *, header, 1);
-  NAPI_ARGV_UINT32(link_type, 2);
+  NAPI_ARGV_INT32(link_type, 2);
   name = get_protocol_name_l7(packet, header, link_type);
   NAPI_RETURN_STRING(name);
 }
@@ -127,7 +131,7 @@ NAPI_METHOD(bind_pfwl_get_protocol_l7) {
 /*   NAPI_ARGV(2); */
 /*   NAPI_ARGV_BUFFER(packet, 0); */
 /*   NAPI_ARGV_BUFFER_CAST(struct pcap_pkthdr *, header, 1); */
-/*   NAPI_ARGV_UINT32(link_type, 2); */
+/*   NAPI_ARGV_INT32(link_type, 2); */
 /*   name = get_protocol_name_l4(packet, header); */
 /*   NAPI_RETURN_STRING(name); */
 /* } */

@@ -41,9 +41,30 @@ console.log('Initializing...');
 peafowl.bind_pfwl_init();
 
 // L2 type
-var LinkType = 0;
-pcap_parser.once('globalHeader', function(raw_packet) {
-    LinkType = raw_packet.linkLayerType;
+var pcap = require('pcap');
+var pcap_session = pcap.createOfflineSession(process.argv[2], "");
+var LinkType = -1;
+pcap_session.on('packet', function (raw_packet) {
+    var packet = pcap.decode.packet(raw_packet);
+    LinkType = packet.link_type;
+    switch (LinkType) {
+    case "LINKTYPE_ETHERNET":
+        LinkType = 1;
+        break;
+    case "LINKTYPE_NULL":
+        LinkType = 0;
+        break;
+    case "LINKTYPE_RAW":
+        LinkType = 101;
+        break;
+    case "LINKTYPE_IEEE802_11_RADIO":
+        LinkType = 127;
+        break;
+    case "LINKTYPE_LINUX_SLL":
+        LinkType = 113;
+    default:
+        console.log("Datalink type not supported");
+    }
 });
 
 pcap_parser.on('packet', function (raw_packet) {
