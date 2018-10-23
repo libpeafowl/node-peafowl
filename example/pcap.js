@@ -1,5 +1,5 @@
-/*  Peafowl Node.js Binding PoC 		*/
-/*  (c) 2018 QXIP BV 	*/
+/*  Peafowl Node.js Binding PoC */
+/*  (c) 2018 QXIP BV 	        */
 /*  http://qxip.net 			*/
 
 var VERSION = "1.0.0";
@@ -38,40 +38,52 @@ console.log("Peafowl Node v"+VERSION);
 counter = 0;
 
 console.log('Initializing...');
-peafowl.pfw_init();
+peafowl.bind_pfwl_init();
+
+// L2 type
+var LinkType = 0;
+pcap_parser.once('globalHeader', function(raw_packet) {
+    LinkType = raw_packet.linkLayerType;
+});
 
 pcap_parser.on('packet', function (raw_packet) {
     counter++;
     var header = raw_packet.header;
     // Build PCAP Hdr Struct
     var newHdr = structs.pcap();
-    newHdr.ts_sec=header.timestampSeconds;
-    newHdr.ts_usec=header.timestampMicroseconds;
-    newHdr.incl_len=header.capturedLength;
-    newHdr.orig_len=header.originalLength;
-    
+    newHdr.ts_sec = header.timestampSeconds;
+    newHdr.ts_usec = header.timestampMicroseconds;
+    newHdr.incl_len = header.capturedLength;
+    newHdr.orig_len = header.originalLength;
+
     // DISSECT AND GET PROTOCOL
-    protoL7 = new Buffer(peafowl.pfw_get_protocol_l7( raw_packet.data, newHdr.rawBuffer ));
-    protoL4 = new Buffer(peafowl.pfw_get_protocol_l4( raw_packet.data, newHdr.rawBuffer ));
+    protoL7 = new Buffer(peafowl.bind_pfw_get_protocol_l7( raw_packet.data, newHdr.rawBuffer, LinkType ));
+    // protoL4 = new Buffer(peafowl.pfw_get_protocol_l4( raw_packet.data, newHdr.rawBuffer ));
 
     // From object to String
-    protoL7 = protoL7.toString()
-    protoL4 = protoL4.toString()
-    
-    console.log( 'L4:', protoL4, 'L7:', protoL7 );
-    var tmpStats = packetStats.bytes[ protoL4 + '.' + protoL7 ];
+    protoL7 = protoL7.toString();
+    // protoL4 = protoL4.toString();
+
+    // console.log( 'L4:', protoL4, 'L7:', protoL7 );
+    console.log( 'L7:', protoL7 );
+    // var tmpStats = packetStats.bytes[ protoL4 + '.' + protoL7 ];
+    var tmpStats = packetStats.bytes[ protoL7 ];
     if (!tmpStats) {
-	packetStats.bytes[ protoL4 + '.' + protoL7 ] = raw_packet.data.length;
-	packetStats.count[ protoL4 + '.' + protoL7 ] = 1;
+	    // packetStats.bytes[ protoL4 + '.' + protoL7 ] = raw_packet.data.length;
+	    // packetStats.count[ protoL4 + '.' + protoL7 ] = 1;
+        packetStats.bytes[ protoL7 ] = raw_packet.data.length;
+        packetStats.count[ protoL7 ] = 1;
     } else {
-	packetStats.bytes[ protoL4 + '.' + protoL7 ] += raw_packet.data.length;
-	packetStats.count[ protoL4 + '.' + protoL7 ] += 1;
+	// packetStats.bytes[ protoL4 + '.' + protoL7 ] += raw_packet.data.length;
+	    // packetStats.count[ protoL4 + '.' + protoL7 ] += 1;
+        packetStats.bytes[ protoL7 ] += raw_packet.data.length;
+        packetStats.count[ protoL7 ] += 1;
     }
 });
 
 pcap_parser.on('end', function () {
     console.log('Terminating...');
-    peafowl.pfw_terminate();
+    peafowl.bind_pfwl_terminate();
 });
 
 var exit = false;

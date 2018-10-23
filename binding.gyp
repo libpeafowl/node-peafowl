@@ -7,7 +7,7 @@
     "include_dirs": [
             "./include", "../peafowl_lib/lib"
     ],
-    "libraries": ["<(module_root_dir)/include/libdpi.so"],
+    "libraries": ["<(module_root_dir)/include/libpeafowl.so"],
     "sources": [ "./peafowl.c" ]
   }]
 }
