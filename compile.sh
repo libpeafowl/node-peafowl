@@ -1,14 +1,17 @@
 #!/bin/bash
 
+TAG="v1.0.0"
+
 if [ ! -d "peafowl_lib" ]; then
   echo "Cloning Peafowl..."
-  git clone https://github.com/DanieleDeSensi/Peafowl.git peafowl_lib
-  echo "Compiling Peafowl..."
+  git clone https://github.com/DanieleDeSensi/Peafowl.git peafowl_lib  
   cd peafowl_lib
+  echo "Getting tag " $TAG
+  git checkout tags/$TAG
+  echo "Compiling Peafowl..."
   mkdir build && cd build
   cmake ../ && make && cd ../../
   echo $PWD
-  cp peafowl_lib/build/src/libpeafowl.* ./include/
   echo "Peafowl lib ready!"
 fi
 
