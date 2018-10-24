@@ -4,4 +4,4 @@ before_install:
   - sudo apt-get install -y libpcap-dev
 node_js:
   - 8
-  - 9
+  - 10
