@@ -5,9 +5,9 @@
       "<!(node -e \"require('napi-macros')\")"
     ],
     "include_dirs": [
-            "./include", "../peafowl_lib/lib"
+            "<(module_root_dir)/include", "<(module_root_dir)/peafowl_lib/include"
     ],
-    "libraries": ["<(module_root_dir)/include/libpeafowl.so"],
+    "libraries": ["<(module_root_dir)/peafowl_lib/build/src/libpeafowl.so"],
     "sources": [ "./peafowl.c" ]
   }]
 }
