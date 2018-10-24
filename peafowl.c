@@ -69,7 +69,7 @@ pfwl_dissection_info_t* parse_packet_l4(char* packet, uint32_t l2_off, uint32_t 
 *********************************************************************************************/
 
 // dissect pachet and return the L7 protocol name
-char* get_protocol_name_l7(char* packet, struct pcap_pkthdr* header, int link_type)
+char* get_L7_protocol_name(char* packet, struct pcap_pkthdr* header, int link_type)
 {
     char* name = NULL;
     pfwl_dissection_info_t r;
@@ -107,7 +107,7 @@ NAPI_METHOD(bind_pfwl_get_protocol_l7) {
   NAPI_ARGV_BUFFER(packet, 0);
   NAPI_ARGV_BUFFER_CAST(struct pcap_pkthdr *, header, 1);
   NAPI_ARGV_INT32(link_type, 2);
-  name = get_protocol_name_l7(packet, header, link_type);
+  name = get_L7_protocol_name(packet, header, link_type);
   NAPI_RETURN_STRING(name);
 }
 
