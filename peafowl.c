@@ -26,9 +26,6 @@ int init()
   return 0;
 }
 
-/**
- * NOT YET IMPLEMENTED WITH NAPI-MACROS ******************************************************
- */
 // parse packet from L2
 pfwl_status_t pfwl_dissect_fromL2(pfwl_state_t* state, char* packet, uint32_t length,
                               uint32_t timestamp, pfwl_protocol_l2_t datalink_type,
@@ -54,9 +51,6 @@ pfwl_status_t pfwl_dissect_fromL4(pfwl_state_t* state, char* packet_fromL4, uint
     return pfwl_dissect_from_L3(state, (const u_char*) packet_fromL4,
                                                 length_fromL4, time(NULL), dissection_info);
 }
-/**
-*********************************************************************************************
-*********************************************************************************************/
 
 // dissect pachet and return the L7 protocol name
 char* get_L7_protocol_name(char* packet, struct pcap_pkthdr* header, int link_type)
@@ -86,9 +80,46 @@ void terminate()
 /*** NAPI METHODS ***/
 
 NAPI_METHOD(bind_pfwl_init) {
-  int r;
-  r = init();
-  NAPI_RETURN_INT32(r);
+    int r;
+    r = init();
+    NAPI_RETURN_INT32(r);
+}
+
+NAPI_METHOD(bind_pfwl_dissect_fromL2) {
+    pfwl_status_t status;
+    NAPI_ARGV(6);
+    NAPI_ARGV_BUFFER_CAST(pfwl_state_t *, state, 0);
+    NAPI_ARGV_BUFFER(pkt, 1);  // pkt from L2
+    NAPI_ARGV_UINT32(len, 2);  // len from L2
+    NAPI_ARGV_INT32(time, 3);
+    NAPI_ARGV_INT32(dl, 4);    // pfwl_protocol_l2_t
+    NAPI_ARGV_BUFFER_CAST(pfwl_dissection_info_t*, d_info, 5);
+    status = pfwl_dissect_fromL2(state, pkt, len, time, dl, d_info);
+    NAPI_RETURN_UINT32(status);
+}
+
+NAPI_METHOD(bind_pfwl_dissect_fromL3) {
+    pfwl_status_t status;
+    NAPI_ARGV(5);
+    NAPI_ARGV_BUFFER_CAST(pfwl_state_t *, state, 0);
+    NAPI_ARGV_BUFFER(pkt, 1);  // pkt from L3
+    NAPI_ARGV_UINT32(len, 2);  // len from L3
+    NAPI_ARGV_INT32(time, 3);
+    NAPI_ARGV_BUFFER_CAST(pfwl_dissection_info_t*, d_info, 4);
+    status = pfwl_dissect_fromL3(state, pkt, len, time, d_info);
+    NAPI_RETURN_UINT32(status);
+}
+
+NAPI_METHOD(bind_pfwl_dissect_fromL4) {
+    pfwl_status_t status;
+    NAPI_ARGV(5);
+    NAPI_ARGV_BUFFER_CAST(pfwl_state_t *, state, 0);
+    NAPI_ARGV_BUFFER(pkt, 1);  // pkt from L4
+    NAPI_ARGV_UINT32(len, 2);  // len from L4
+    NAPI_ARGV_INT32(time, 3);
+    NAPI_ARGV_BUFFER_CAST(pfwl_dissection_info_t*, d_info, 4);
+    status = pfwl_dissect_fromL4(state, pkt, len, time, d_info);
+    NAPI_RETURN_UINT32(status);
 }
 
 NAPI_METHOD(bind_pfwl_get_protocol_l7) {
