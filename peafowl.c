@@ -30,37 +30,39 @@ int init()
  * NOT YET IMPLEMENTED WITH NAPI-MACROS ******************************************************
  */
 // parse packet from L2
-pfwl_dissection_info_t* parse_packet_l2(char* packet, uint32_t link_type)
+pfwl_status_t pfwl_dissect_from_L2(pfwl_state_t* state, char* packet, uint32_t length,
+                              uint32_t timestamp, pfwl_protocol_l2_t datalink_type,
+                              pfwl_dissection_info_t* dissection_info)
 {
-    pfwl_dissection_info_t* r = NULL;
     pfwl_status_t status = pfwl_dissect_from_L2(state, (const u_char*) packet,
-                                                header->caplen, time(NULL), link_type, r);
+                                                length, time(NULL),
+                                                datalink_type, dissection_info);
     if(status == PFWL_STATUS_OK)
-        return r;
+        return dissection_info;
     else
         return NULL;
 }
 
 // parse packet from L3
-pfwl_dissection_info_t* parse_packet_l3(char* packet, uint32_t l2_off)
+pfwl_status_t pfwl_dissect_from_L3(pfwl_state_t* state, char* packet_fromL3, uint32_t length_fromL3,
+                                   uint32_t timestamp, pfwl_dissection_info_t* dissection_info)
 {
-    pfwl_dissection_info_t* r = NULL;
-    pfwl_status_t status = pfwl_dissect_from_L3(state, (const u_char*) packet+l2_off,
-                                                header->len-l2_off, time(NULL), r);
+    pfwl_status_t status = pfwl_dissect_from_L3(state, (const u_char*) packet_fromL3,
+                                                length_fromL3, time(NULL), dissection_info);
     if(status == PFWL_STATUS_OK)
-        return r;
+        return dissection_info;
     else
         return NULL;
 }
 
 // parse packet from L4
-pfwl_dissection_info_t* parse_packet_l4(char* packet, uint32_t l2_off, uint32_t l3_off)
+pfwl_status_t pfwl_dissect_from_L4(pfwl_state_t* state, char* packet_fromL4, uint32_t length_fromL4,
+                                   uint32_t timestamp, pfwl_dissection_info_t* dissection_info)
 {
-    pfwl_dissection_info_t* r = NULL;
-    pfwl_status_t status = pfwl_dissect_from_L4(state, (const u_char*) packet+(l2_off+l3_off),
-                                                header->len-(l2_off+l3_off), time(NULL), r);
+    pfwl_status_t status = pfwl_dissect_from_L3(state, (const u_char*) packet_fromL4,
+                                                length_fromL4, time(NULL), dissection_info);
     if(status == PFWL_STATUS_OK)
-        return r;
+        return dissection_info;
     else
         return NULL;
 }
