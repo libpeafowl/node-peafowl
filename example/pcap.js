@@ -38,7 +38,7 @@ console.log("Peafowl Node v"+VERSION);
 counter = 0;
 
 console.log('Initializing...');
-peafowl.bind_pfwl_init();
+peafowl.init();
 
 // L2 type
 var pcap = require('pcap');
@@ -78,7 +78,7 @@ pcap_parser.on('packet', function (raw_packet) {
     newHdr.orig_len = header.originalLength;
 
     // DISSECT AND GET PROTOCOL
-    protoL7 = new Buffer(peafowl.bind_pfwl_get_protocol_l7( raw_packet.data, newHdr.rawBuffer, LinkType ));
+    protoL7 = new Buffer(peafowl.get_L7_protocol_name( raw_packet.data, newHdr.rawBuffer, LinkType ));
     // protoL4 = new Buffer(peafowl.pfw_get_protocol_l4( raw_packet.data, newHdr.rawBuffer ));
 
     // From object to String
@@ -104,7 +104,7 @@ pcap_parser.on('packet', function (raw_packet) {
 
 pcap_parser.on('end', function () {
     console.log('Terminating...');
-    peafowl.bind_pfwl_terminate();
+    peafowl.terminate();
 });
 
 var exit = false;
