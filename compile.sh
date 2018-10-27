@@ -7,7 +7,7 @@ if [ ! -d "peafowl_lib" ]; then
   git clone https://github.com/DanieleDeSensi/Peafowl.git peafowl_lib  
   cd peafowl_lib
   echo "Getting tag " $TAG
-  git checkout tags/$TAG
+  git checkout master
   echo "Compiling Peafowl..."
   mkdir build && cd build
   cmake ../ && make && cd ../../
