@@ -1,9 +1,9 @@
 
 
-<img src="https://i.imgur.com/jrQX0Of.gif" width=250> 
+<img src="https://i.imgur.com/jrQX0Of.gif" width=250>
 
 # node-Peafowl
-Native Node Bindings for the [Peafowl DPI Library](https://github.com/DanieleDeSensi/Peafowl) 
+Native Node Bindings for the [Peafowl DPI Library](https://github.com/DanieleDeSensi/Peafowl)
 
 [![Build Status](https://travis-ci.org/libpeafowl/node-peafowl.svg?branch=master)](https://travis-ci.org/libpeafowl/node-peafowl)
 [![dependencies Status](https://david-dm.org/libpeafowl/node-peafowl/status.svg)](https://david-dm.org/libpeafowl/node-peafowl)
@@ -24,13 +24,12 @@ npm install
 ```
 
 #### Functions
-| function  | parameters  |  description | 
+| function  | parameters  |  description |
 |---|---|---|
-| pfw_init  | void  |  Initialize the library for statefull env |
-|  pfw_terminate | void  | Teardown the library |
-| pfw_get_protocol_l4  | struct pcap_pkthdr *, header  | Dissect and return Protocol name as char * (l4) |
-| pfw_get_protocol_l7  | struct pcap_pkthdr *, header  | Dissect and return Protocol name as char * (l7) |
-| pfw_get_protocol_pair  | struct pcap_pkthdr *, header  | Dissect and return Protocol Pair (l4,l7) |
+| bind_pfwl_init  | void  |  Initialize the library for statefull env |
+|  bind_pfwl_terminate | void  | Teardown the library |
+| bind_pfwl_get_protocol_l4  | struct pcap_pkthdr *, header  | Dissect and return Protocol name as char * (l4) |
+| bind_pfwl_get_protocol_l7  | struct pcap_pkthdr *, header  | Dissect and return Protocol name as char * (l7) |
 
 ### Usage
 See our fully working [Example](https://github.com/lmangani/node-peafowl/tree/master/example) using PCAP files
@@ -52,4 +51,3 @@ If you use Peafowl or Node-Peafowl for scientific purposes, please cite the foll
 ```"Deep Packet Inspection on Commodity Hardware using FastFlow", M. Danelutto, L. Deri, D. De Sensi, M. Torquati```
 
 ###### This Project is sponsored by [QXIP BV](http://qxip.net)
-

@@ -6,159 +6,134 @@
 #include <netinet/in.h>
 #include <pcap.h>
 #include <time.h>
-#include "peafowl_lib/src/api.h"
-
-#define SIZE_IPv4_FLOW_TABLE 32767
-#define SIZE_IPv6_FLOW_TABLE 32767
-#define MAX_IPv4_ACTIVE_FLOWS 500000
-#define MAX_IPv6_ACTIVE_FLOWS 500000
+#include "peafowl_lib/include/peafowl/peafowl.h"
 
 #define BUFF 10
 
-dpi_library_state_t* state; // the state
+pfwl_state_t* state; // the state
 
 struct pcap_pkthdr* header;
 
 // init state
-int init()
+int b_init()
 {
   // C function from Peafowl lib
-  state = dpi_init_stateful(SIZE_IPv4_FLOW_TABLE, SIZE_IPv6_FLOW_TABLE, MAX_IPv4_ACTIVE_FLOWS, MAX_IPv6_ACTIVE_FLOWS);
+  state = pfwl_init();
   if(state == NULL) {
-    fprintf(stderr, "dpi_init_stateful ERROR\n");
-    return -1; // ERROR
+      fprintf(stderr, "peafowl init ERROR\n");
+      return -1; // ERROR
   }
-
-  return 0; 
+  return 0;
 }
 
-// identify protocols name L7
-char * get_protocol_l7(char* packet, struct pcap_pkthdr *header)
+// parse packet from L2
+pfwl_status_t _dissect_from_L2(pfwl_state_t* state, char* packet, uint32_t length,
+                              uint32_t timestamp, pfwl_protocol_l2_t datalink_type,
+                              pfwl_dissection_info_t* dissection_info)
 {
-  dpi_identification_result_t r;
-  char* name = NULL;
-
-  r = dpi_get_protocol(state, (const u_char*) packet+sizeof(struct ether_header),
-		       header->len-sizeof(struct ether_header), time(NULL));
-
-  name = calloc(BUFF, sizeof(char));
-  if(name == NULL) {
-    fprintf(stderr, "calloc ERROR\n");
-    return NULL; // ERROR
-  }
-  name = dpi_get_protocol_string(r.protocol.l7prot);
-
-  return name;    
-
+    return pfwl_dissect_from_L2(state, (const u_char*) packet,
+                                length, time(NULL),
+                                datalink_type, dissection_info);
 }
 
-// identify protocols name L4
-char * get_protocol_l4(char* packet, struct pcap_pkthdr *header)
+// parse packet from L3
+pfwl_status_t _dissect_from_L3(pfwl_state_t* state, char* packet_fromL3, uint32_t length_fromL3,
+                                   uint32_t timestamp, pfwl_dissection_info_t* dissection_info)
 {
-  dpi_identification_result_t r;
-  char* name = NULL;
-
-  r = dpi_get_protocol(state, (const u_char*) packet+sizeof(struct ether_header),
-		       header->len-sizeof(struct ether_header), time(NULL));
-
-  name = calloc(BUFF, sizeof(char));
-  if(name == NULL){
-    fprintf(stderr, "calloc ERROR\n");
-    return NULL; // ERROR
-  }
-
-  // Check for L4
-  if(r.protocol.l4prot == IPPROTO_UDP){
-    memcpy(name, "UDP", 3);
-    return name;
-  } else if(r.protocol.l4prot == IPPROTO_TCP){
-    memcpy(name, "TCP", 3);
-    return name;
-  }
-  memcpy(name, "Unknow", strlen("Unknow"));
-  return name;
+    return pfwl_dissect_from_L3(state, (const u_char*) packet_fromL3,
+                                length_fromL3, time(NULL), dissection_info);
 }
 
-// identify protocols pairs [L7,L4]
-char * get_protocol_pair(char* packet, struct pcap_pkthdr *header)
+// parse packet from L4
+pfwl_status_t _dissect_from_L4(pfwl_state_t* state, char* packet_fromL4, uint32_t length_fromL4,
+                                   uint32_t timestamp, pfwl_dissection_info_t* dissection_info)
 {
-  dpi_identification_result_t r;
-  char * res;
-  
-  res = malloc(2 * sizeof(char));
-  if(res == NULL){
-    fprintf(stderr, "malloc ERROR\n");
-    return NULL; // ERROR
-  }
-  memset(res,-1,2);
+    return pfwl_dissect_from_L3(state, (const u_char*) packet_fromL4,
+                                                length_fromL4, time(NULL), dissection_info);
+}
 
-  r = dpi_get_protocol(state, (const u_char*) packet+sizeof(struct ether_header),
-		       header->len-sizeof(struct ether_header), time(NULL));
-  
-  if(r.protocol.l4prot == IPPROTO_UDP){
-    res[0] = IPPROTO_UDP;
-    if(r.protocol.l7prot < DPI_NUM_UDP_PROTOCOLS){
-      /* stats.parsed_packets++; */
-      res[1] = r.protocol.l7prot;
-      return res;
+// dissect pachet and return the L7 protocol name
+char* _get_L7_protocol_name(char* packet, struct pcap_pkthdr* header, int link_type)
+{
+    char* name = NULL;
+    pfwl_dissection_info_t r;
+    // convert L2 type in L2 peafowl type
+    pfwl_protocol_l2_t dlt = pfwl_convert_pcap_dlt(link_type);
+    // call dissection from L2
+    pfwl_status_t status = pfwl_dissect_from_L2(state, (const u_char*) packet,
+                                                header->caplen, time(NULL), dlt, &r);
+
+    if(status >= PFWL_STATUS_OK) {
+        name = pfwl_get_L7_protocol_name(r.l7.protocol);
+        return name;
     }
-  } else if(r.protocol.l4prot == IPPROTO_TCP){
-    res[0] = IPPROTO_TCP;
-    if(r.protocol.l7prot < DPI_NUM_TCP_PROTOCOLS){
-      /* stats.parsed_packets++; */
-      res[1] = DPI_NUM_UDP_PROTOCOLS + r.protocol.l7prot;
-      return res;
-    }
-  }
-  return res;
+    else return "ERROR";
 }
 
 // terminate
-void terminate()
+void _terminate()
 {
-  dpi_terminate(state);
+  pfwl_terminate(state);
 }
 
 
 /*** NAPI METHODS ***/
 
-NAPI_METHOD(pfw_init) {
-  int r;
-  r = init();
-  NAPI_RETURN_INT32(r);
+NAPI_METHOD(init) {
+    int r;
+    r = b_init();
+    NAPI_RETURN_INT32(r);
 }
 
+NAPI_METHOD(dissect_from_L2) {
+    pfwl_status_t status;
+    NAPI_ARGV(6);
+    NAPI_ARGV_BUFFER_CAST(pfwl_state_t *, state, 0);
+    NAPI_ARGV_BUFFER(pkt, 1);  // pkt from L2
+    NAPI_ARGV_UINT32(len, 2);  // len from L2
+    NAPI_ARGV_INT32(time, 3);
+    NAPI_ARGV_INT32(dl, 4);    // pfwl_protocol_l2_t
+    NAPI_ARGV_BUFFER_CAST(pfwl_dissection_info_t*, d_info, 5);
+    status = _dissect_from_L2(state, pkt, len, time, dl, d_info);
+    NAPI_RETURN_UINT32(status);
+}
 
-NAPI_METHOD(pfw_get_protocol_l7) {
+NAPI_METHOD(dissect_from_L3) {
+    pfwl_status_t status;
+    NAPI_ARGV(5);
+    NAPI_ARGV_BUFFER_CAST(pfwl_state_t *, state, 0);
+    NAPI_ARGV_BUFFER(pkt, 1);  // pkt from L3
+    NAPI_ARGV_UINT32(len, 2);  // len from L3
+    NAPI_ARGV_INT32(time, 3);
+    NAPI_ARGV_BUFFER_CAST(pfwl_dissection_info_t*, d_info, 4);
+    status = _dissect_from_L3(state, pkt, len, time, d_info);
+    NAPI_RETURN_UINT32(status);
+}
+
+NAPI_METHOD(dissect_from_L4) {
+    pfwl_status_t status;
+    NAPI_ARGV(5);
+    NAPI_ARGV_BUFFER_CAST(pfwl_state_t *, state, 0);
+    NAPI_ARGV_BUFFER(pkt, 1);  // pkt from L4
+    NAPI_ARGV_UINT32(len, 2);  // len from L4
+    NAPI_ARGV_INT32(time, 3);
+    NAPI_ARGV_BUFFER_CAST(pfwl_dissection_info_t*, d_info, 4);
+    status = _dissect_from_L4(state, pkt, len, time, d_info);
+    NAPI_RETURN_UINT32(status);
+}
+
+NAPI_METHOD(get_L7_protocol_name) {
   char *name;
-  NAPI_ARGV(2);
+  NAPI_ARGV(3);
   NAPI_ARGV_BUFFER(packet, 0);
   NAPI_ARGV_BUFFER_CAST(struct pcap_pkthdr *, header, 1);
-  name = get_protocol_l7(packet, header);
+  NAPI_ARGV_INT32(link_type, 2);
+  name = _get_L7_protocol_name(packet, header, link_type);
   NAPI_RETURN_STRING(name);
 }
 
-NAPI_METHOD(pfw_get_protocol_l4) {
-  char *name;
-  NAPI_ARGV(2);
-  NAPI_ARGV_BUFFER(packet, 0);
-  NAPI_ARGV_BUFFER_CAST(struct pcap_pkthdr *, header, 1);
-  name = get_protocol_l4(packet, header);
-  NAPI_RETURN_STRING(name);
-}
-
-NAPI_METHOD(pfw_get_protocol_pair) {
-  char *res;
-  NAPI_ARGV(2);
-  NAPI_ARGV_BUFFER(packet, 0);
-  NAPI_ARGV_BUFFER_CAST(struct pcap_pkthdr *, header, 1);
-  res = get_protocol_pair(packet, header);
-  NAPI_RETURN_UTF8(res, 2);
-}
-
-
-NAPI_METHOD(pfw_terminate) {
-  terminate();
+NAPI_METHOD(terminate) {
+  _terminate();
   return NULL;
 }
 
@@ -173,12 +148,12 @@ NAPI_METHOD(test_mul) {
   NAPI_RETURN_INT32(number)
 }
 
-
 NAPI_INIT() {
-  NAPI_EXPORT_FUNCTION(pfw_init);
-  NAPI_EXPORT_FUNCTION(pfw_get_protocol_l7);
-  NAPI_EXPORT_FUNCTION(pfw_get_protocol_l4);
-  NAPI_EXPORT_FUNCTION(pfw_get_protocol_pair);
-  NAPI_EXPORT_FUNCTION(pfw_terminate);
+  NAPI_EXPORT_FUNCTION(init);
+  NAPI_EXPORT_FUNCTION(dissect_from_L2);
+  NAPI_EXPORT_FUNCTION(dissect_from_L3);
+  NAPI_EXPORT_FUNCTION(dissect_from_L4);
+  NAPI_EXPORT_FUNCTION(get_L7_protocol_name);
+  NAPI_EXPORT_FUNCTION(terminate);
   NAPI_EXPORT_FUNCTION(test_mul);
 }
