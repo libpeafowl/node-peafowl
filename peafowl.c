@@ -26,6 +26,12 @@ int b_init()
   return 0;
 }
 
+// Converts a pcap datalink type to a pfwl_datalink_type_t
+pfwl_protocol_l2_t _convert_pcap_dlt(int link_type)
+{
+    return pfwl_convert_pcap_dlt(link_type);
+}
+
 // parse packet from L2
 pfwl_status_t _dissect_from_L2(pfwl_state_t* state, char* packet, uint32_t length,
                               uint32_t timestamp, pfwl_protocol_l2_t datalink_type,
@@ -84,6 +90,15 @@ NAPI_METHOD(init) {
     r = b_init();
     NAPI_RETURN_INT32(r);
 }
+
+NAPI_METHOD(convert_pcap_dlt) {
+    pfwl_protocol_l2_t plt;
+    NAPI_ARGV(1);
+    NAPI_ARGV_UINT32(dlt, 0);
+    plt = _convert_pcap_dlt(dlt);
+    NAPI_RETURN_UINT32(plt);
+}
+
 
 NAPI_METHOD(dissect_from_L2) {
     pfwl_status_t status;
@@ -150,6 +165,7 @@ NAPI_METHOD(test_mul) {
 
 NAPI_INIT() {
   NAPI_EXPORT_FUNCTION(init);
+  NAPI_EXPORT_FUNCTION(convert_pcap_dlt);
   NAPI_EXPORT_FUNCTION(dissect_from_L2);
   NAPI_EXPORT_FUNCTION(dissect_from_L3);
   NAPI_EXPORT_FUNCTION(dissect_from_L4);
