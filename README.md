@@ -23,13 +23,12 @@ The install script will automatically attempt compiling peafowl and building nod
 npm install
 ```
 
-#### Functions
+#### Main Functions
 | function  | parameters  |  description |
 |---|---|---|
-| bind_pfwl_init  | void  |  Initialize the library for statefull env |
-|  bind_pfwl_terminate | void  | Teardown the library |
-| bind_pfwl_get_protocol_l4  | struct pcap_pkthdr *, header  | Dissect and return Protocol name as char * (l4) |
-| bind_pfwl_get_protocol_l7  | struct pcap_pkthdr *, header  | Dissect and return Protocol name as char * (l7) |
+| _init_  | (void) |  Initialize the library for statefull env |
+| _terminate_ | (void) | Teardown the library |
+| _get_L7_protocol_name__ | packet, header, link type | Dissect and return Protocol name as char * (l7) |
 
 ### Usage
 See our fully working [Example](https://github.com/lmangani/node-peafowl/tree/master/example) using PCAP files
