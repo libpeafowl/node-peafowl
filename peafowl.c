@@ -80,8 +80,14 @@ pfwl_protocol_l7_t _guess_protocol(pfwl_dissection_info_t guess_info)
     return pfwl_guess_protocol(guess_info);
 }
 
-// dissect pachet and return the L7 protocol name
-char* _get_L7_protocol_name(char* packet, struct pcap_pkthdr* header, int link_type)
+// returns the string represetation of a protocol
+char* _get_L7_protocol_name(pfwl_protocol_l7_t protocol)
+{
+    return pfwl_get_L7_protocol_name(protocol);
+}
+
+// dissect pachet from L2 and return the L7 protocol name
+char* _get_L7_from_L2(char* packet, struct pcap_pkthdr* header, int link_type)
 {
     char* name = NULL;
     pfwl_dissection_info_t r;
@@ -185,13 +191,21 @@ NAPI_METHOD(guess_protocol) {
 }
 
 NAPI_METHOD(get_L7_protocol_name) {
-  char *name;
-  NAPI_ARGV(3);
-  NAPI_ARGV_BUFFER(packet, 0);
-  NAPI_ARGV_BUFFER_CAST(struct pcap_pkthdr *, header, 1);
-  NAPI_ARGV_INT32(link_type, 2);
-  name = _get_L7_protocol_name(packet, header, link_type);
-  NAPI_RETURN_STRING(name);
+    char* name;
+    NAPI_ARGV(1);
+    NAPI_ARGV_UINT32(proto, 0);
+    name = _get_L7_protocol_name(proto);
+    NAPI_RETURN_STRING(name);
+}
+
+NAPI_METHOD(get_L7_from_L2) {
+    char *name;
+    NAPI_ARGV(3);
+    NAPI_ARGV_BUFFER(packet, 0);
+    NAPI_ARGV_BUFFER_CAST(struct pcap_pkthdr *, header, 1);
+    NAPI_ARGV_INT32(link_type, 2);
+    name = _get_L7_from_L2(packet, header, link_type);
+    NAPI_RETURN_STRING(name);
 }
 
 NAPI_METHOD(terminate) {
@@ -222,6 +236,7 @@ NAPI_INIT() {
   NAPI_EXPORT_FUNCTION(protocol_l7_disable);
   NAPI_EXPORT_FUNCTION(guess_protocol);
   NAPI_EXPORT_FUNCTION(get_L7_protocol_name);
+  NAPI_EXPORT_FUNCTION(get_L7_from_L2);
   NAPI_EXPORT_FUNCTION(terminate);
   NAPI_EXPORT_FUNCTION(test_mul);
 }

@@ -78,25 +78,16 @@ pcap_parser.on('packet', function (raw_packet) {
     newHdr.orig_len = header.originalLength;
 
     // DISSECT AND GET PROTOCOL
-    protoL7 = new Buffer(peafowl.get_L7_protocol_name( raw_packet.data, newHdr.rawBuffer, LinkType ));
-    // protoL4 = new Buffer(peafowl.pfw_get_protocol_l4( raw_packet.data, newHdr.rawBuffer ));
+    protoL7 = new Buffer.from(peafowl.get_L7_from_L2( raw_packet.data, newHdr.rawBuffer, LinkType ));
 
     // From object to String
     protoL7 = protoL7.toString();
-    // protoL4 = protoL4.toString();
-
-    // console.log( 'L4:', protoL4, 'L7:', protoL7 );
     console.log("L7: ", protoL7);
-    // var tmpStats = packetStats.bytes[ protoL4 + '.' + protoL7 ];
     var tmpStats = packetStats.bytes[ protoL7 ];
     if (!tmpStats) {
-	    // packetStats.bytes[ protoL4 + '.' + protoL7 ] = raw_packet.data.length;
-	    // packetStats.count[ protoL4 + '.' + protoL7 ] = 1;
         packetStats.bytes[ protoL7 ] = raw_packet.data.length;
         packetStats.count[ protoL7 ] = 1;
     } else {
-	// packetStats.bytes[ protoL4 + '.' + protoL7 ] += raw_packet.data.length;
-	    // packetStats.count[ protoL4 + '.' + protoL7 ] += 1;
         packetStats.bytes[ protoL7 ] += raw_packet.data.length;
         packetStats.count[ protoL7 ] += 1;
     }
@@ -113,9 +104,9 @@ process.on('exit', function() {
     console.log('Total Packets: '+ counter);
     for (var key in packetStats.bytes) {
 	    var id = key.split('.');
-	    console.log('L7: ' + id[0]
-		            + '\t Count: ' + packetStats.count[key]
-		            + '\t Size: ' + formatBytes(packetStats.bytes[key]));
+	    console.log('L7: ' + id[0] +
+                    '\t Count: ' + packetStats.count[key] +
+                    '\t Size: ' + formatBytes(packetStats.bytes[key]));
     }
     console.table(packetStats);
 });
