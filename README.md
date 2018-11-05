@@ -28,7 +28,7 @@ npm install
 |---|---|---|
 | _init_  | (void) |  Initialize the library for statefull env |
 | _terminate_ | (void) | Teardown the library |
-| _get_L7_protocol_name__ | packet, header, link type | Dissect and return Protocol name as char * (l7) |
+| _get_L7_protocol_name_ | (packet, header, link type) | Dissect and return Protocol name as char * (l7) |
 
 ### Usage
 See our fully working [Example](https://github.com/lmangani/node-peafowl/tree/master/example) using PCAP files
