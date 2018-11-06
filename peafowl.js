@@ -13,6 +13,7 @@ module.exports = {
     protocol_l7_disable: bindings.protocol_l7_disable,
     guess_protocol: bindings.guess_protocol,
     get_L7_protocol_name: bindings.get_L7_protocol_name,
+    get_L7_protocol_id: bindings.get_L7_protocol_id,
     get_L7_from_L2: bindings.get_L7_from_L2,
     terminate: bindings.terminate
 };

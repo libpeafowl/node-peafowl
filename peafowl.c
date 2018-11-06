@@ -86,6 +86,12 @@ char* _get_L7_protocol_name(pfwl_protocol_l7_t protocol)
     return pfwl_get_L7_protocol_name(protocol);
 }
 
+// returns the protocol id corresponding to a protocol string
+pfwl_protocol_l7_t _get_L7_protocol_id(char* string)
+{
+    return pfwl_get_L7_protocol_id(string);
+}
+
 // dissect pachet from L2 and return the L7 protocol name
 char* _get_L7_from_L2(char* packet, struct pcap_pkthdr* header, int link_type)
 {
@@ -198,6 +204,14 @@ NAPI_METHOD(get_L7_protocol_name) {
     NAPI_RETURN_STRING(name);
 }
 
+NAPI_METHOD(get_L7_protocol_id) {
+    uint8_t id;
+    NAPI_ARGV(1);
+    NAPI_ARGV_BUFFER(string, 0);
+    id = _get_L7_protocol_id(string);
+    NAPI_RETURN_UINT32(id);
+}
+
 NAPI_METHOD(get_L7_from_L2) {
     char *name;
     NAPI_ARGV(3);
@@ -236,6 +250,7 @@ NAPI_INIT() {
   NAPI_EXPORT_FUNCTION(protocol_l7_disable);
   NAPI_EXPORT_FUNCTION(guess_protocol);
   NAPI_EXPORT_FUNCTION(get_L7_protocol_name);
+  NAPI_EXPORT_FUNCTION(get_L7_protocol_id);
   NAPI_EXPORT_FUNCTION(get_L7_from_L2);
   NAPI_EXPORT_FUNCTION(terminate);
   NAPI_EXPORT_FUNCTION(test_mul);
