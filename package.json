@@ -12,7 +12,7 @@
   "scripts": {
     "preinstall": "./compile.sh",
     "install": "node-gyp-build",
-    "test": "cd example && npm install && cd .. && node example/pcap.js example/pcap/http.pcap"
+    "test": "cd example && npm install && cd .. && node example/pcap_1.js example/pcap/http.pcap"
   },
   "main": "peafowl.js",
   "directories": {
