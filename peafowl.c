@@ -8,11 +8,10 @@
 #include <time.h>
 #include "peafowl_lib/include/peafowl/peafowl.h"
 
-#define BUFF 10
 
 // global definition for wrapping //
-pfwl_state_t* state;         // the state
-pfwl_dissection_info_t *r;   // the dissection info struct
+static pfwl_state_t* state;         // the state
+static pfwl_dissection_info_t dissection_info;    // the dissection info struct
 struct pcap_pkthdr* header;  // the header of pkt
 
 
@@ -38,54 +37,51 @@ pfwl_protocol_l2_t _convert_pcap_dlt(int link_type)
 
 
 // parse packet from L2
-pfwl_status_t _dissect_from_L2(pfwl_state_t* state, char* packet, uint32_t length,
-                              uint32_t timestamp, pfwl_protocol_l2_t datalink_type,
-                              pfwl_dissection_info_t* dissection_info)
+pfwl_status_t _dissect_from_L2(char* packet, uint32_t length,
+                               uint32_t timestamp, pfwl_protocol_l2_t datalink_type)
 {
     return pfwl_dissect_from_L2(state, (const u_char*) packet,
                                 length, time(NULL),
-                                datalink_type, dissection_info);
+                                datalink_type, &dissection_info);
 }
 
 
 // parse packet from L3
-pfwl_status_t _dissect_from_L3(pfwl_state_t* state, char* packet_fromL3, uint32_t length_fromL3,
-                                   uint32_t timestamp, pfwl_dissection_info_t* dissection_info)
+pfwl_status_t _dissect_from_L3(char* packet_fromL3, uint32_t length_fromL3,
+                               uint32_t timestamp)
 {
     return pfwl_dissect_from_L3(state, (const u_char*) packet_fromL3,
-                                length_fromL3, time(NULL), dissection_info);
+                                length_fromL3, time(NULL), &dissection_info);
 }
 
 
 // parse packet from L4
-pfwl_status_t _dissect_from_L4(pfwl_state_t* state, char* packet_fromL4, uint32_t length_fromL4,
-                                   uint32_t timestamp, pfwl_dissection_info_t* dissection_info)
+pfwl_status_t _dissect_from_L4(char* packet_fromL4, uint32_t length_fromL4,
+                               uint32_t timestamp)
 {
     return pfwl_dissect_from_L3(state, (const u_char*) packet_fromL4,
-                                length_fromL4, time(NULL), dissection_info);
+                                length_fromL4, time(NULL), &dissection_info);
 }
 
 
 // enables an L7 protocol dissector
-uint8_t _protocol_L7_enable(pfwl_state_t *state,
-                            pfwl_protocol_l7_t protocol)
+uint8_t _protocol_L7_enable(pfwl_protocol_l7_t protocol)
 {
     return pfwl_protocol_l7_enable(state, protocol);
 }
 
 
 // disables an L7 protocol dissector
-uint8_t _protocol_L7_disable(pfwl_state_t *state,
-                            pfwl_protocol_l7_t protocol)
+uint8_t _protocol_L7_disable(pfwl_protocol_l7_t protocol)
 {
     return pfwl_protocol_l7_disable(state, protocol);
 }
 
 
 // guesses the protocol looking only at source/destination ports
-pfwl_protocol_l7_t _guess_protocol(pfwl_dissection_info_t guess_info)
+pfwl_protocol_l7_t _guess_protocol()
 {
-    return pfwl_guess_protocol(guess_info);
+    return pfwl_guess_protocol(dissection_info);
 }
 
 
@@ -112,10 +108,10 @@ char* _get_L7_from_L2(char* packet, struct pcap_pkthdr* header, int link_type)
     pfwl_protocol_l2_t dlt = pfwl_convert_pcap_dlt(link_type);
     // call dissection from L2
     pfwl_status_t status = pfwl_dissect_from_L2(state, (const u_char*) packet,
-                                                header->caplen, time(NULL), dlt, r);
+                                                header->caplen, time(NULL), dlt, &dissection_info);
 
     if(status >= PFWL_STATUS_OK) {
-        name = pfwl_get_L7_protocol_name(r->l7.protocol);
+        name = pfwl_get_L7_protocol_name(dissection_info.l7.protocol);
         return name;
     }
     else return "ERROR";
@@ -123,22 +119,21 @@ char* _get_L7_from_L2(char* packet, struct pcap_pkthdr* header, int link_type)
 
 
 // enables the extraction of a specific L7 field for a given protocol
-uint8_t _field_add_L7(pfwl_state_t* state, pfwl_field_id_t field)
+uint8_t _field_add_L7(pfwl_field_id_t field)
 {
     return pfwl_field_add_L7(state, field);
 }
 
 
 // disables the extraction of a specific L7 field for a given protocol
-uint8_t _field_remove_L7(pfwl_state_t* state, pfwl_field_id_t field)
+uint8_t _field_remove_L7(pfwl_field_id_t field)
 {
     return pfwl_field_remove_L7(state, field);
 }
 
 
 // set the accuracy level of dissection
-uint8_t _set_protocol_accuracy_L7(pfwl_state_t* state,
-                                  pfwl_protocol_l7_t protocol,
+uint8_t _set_protocol_accuracy_L7(pfwl_protocol_l7_t protocol,
                                   pfwl_dissector_accuracy_t accuracy)
 {
     return pfwl_set_protocol_accuracy_L7(state, protocol, accuracy);
@@ -174,20 +169,10 @@ uint8_t _field_array_get_pair(pfwl_field_t *fields,
 
 
 // extract specific HTTP header (ret = 0, header_value is set)
-uint8_t _http_get_header(pfwl_dissection_info_t *dissection_info,
-                         char *header_name,
+uint8_t _http_get_header(char *header_name,
                          pfwl_string_t *header_value)
 {
-    return pfwl_http_get_header(dissection_info, header_name, header_value);
-}
-
-
-// checks if a specific L7 protocol has been identified in a given dissection info
-// NOTE: protocols are associated to flows and not to packets
-uint8_t _has_protocol_L7(pfwl_dissection_info_t* dissection_info,
-                         pfwl_protocol_l7_t protocol)
-{
-    return pfwl_has_protocol_L7(dissection_info, protocol);
+    return pfwl_http_get_header(&dissection_info, header_name, header_value);
 }
 
 
@@ -216,64 +201,54 @@ NAPI_METHOD(convert_pcap_dlt) {
 
 NAPI_METHOD(dissect_from_L2) {
     pfwl_status_t status;
-    NAPI_ARGV(6);
-    NAPI_ARGV_BUFFER_CAST(pfwl_state_t*, state, 0);
-    NAPI_ARGV_BUFFER(pkt, 1);  // pkt from L2
-    NAPI_ARGV_UINT32(len, 2);  // len from L2
-    NAPI_ARGV_INT32(time, 3);
-    NAPI_ARGV_INT32(dl, 4);    // pfwl_protocol_l2_t
-    NAPI_ARGV_BUFFER_CAST(pfwl_dissection_info_t*, d_info, 5);
-    status = _dissect_from_L2(state, pkt, len, time, dl, d_info);
-    NAPI_RETURN_UINT32(status);
+    NAPI_ARGV(4);
+    NAPI_ARGV_BUFFER(pkt, 0);  // pkt from L2
+    NAPI_ARGV_UINT32(len, 1);  // len from L2
+    NAPI_ARGV_INT32(time, 2);
+    NAPI_ARGV_INT32(dl, 3);    // pfwl_protocol_l2_t
+    status = _dissect_from_L2(pkt, len, time, dl);
+    NAPI_RETURN_INT32(status);
 }
 
 NAPI_METHOD(dissect_from_L3) {
     pfwl_status_t status;
-    NAPI_ARGV(5);
-    NAPI_ARGV_BUFFER_CAST(pfwl_state_t*, state, 0);
-    NAPI_ARGV_BUFFER(pkt, 1);  // pkt from L3
-    NAPI_ARGV_UINT32(len, 2);  // len from L3
-    NAPI_ARGV_INT32(time, 3);
-    NAPI_ARGV_BUFFER_CAST(pfwl_dissection_info_t*, d_info, 4);
-    status = _dissect_from_L3(state, pkt, len, time, d_info);
+    NAPI_ARGV(3);
+    NAPI_ARGV_BUFFER(pkt, 0);  // pkt from L3
+    NAPI_ARGV_UINT32(len, 1);  // len from L3
+    NAPI_ARGV_INT32(time, 2);
+    status = _dissect_from_L3(pkt, len, time);
     NAPI_RETURN_UINT32(status);
 }
 
 NAPI_METHOD(dissect_from_L4) {
     pfwl_status_t status;
-    NAPI_ARGV(5);
-    NAPI_ARGV_BUFFER_CAST(pfwl_state_t*, state, 0);
-    NAPI_ARGV_BUFFER(pkt, 1);  // pkt from L4
-    NAPI_ARGV_UINT32(len, 2);  // len from L4
-    NAPI_ARGV_INT32(time, 3);
-    NAPI_ARGV_BUFFER_CAST(pfwl_dissection_info_t*, d_info, 4);
-    status = _dissect_from_L4(state, pkt, len, time, d_info);
+    NAPI_ARGV(3);
+    NAPI_ARGV_BUFFER(pkt, 0);  // pkt from L4
+    NAPI_ARGV_UINT32(len, 1);  // len from L4
+    NAPI_ARGV_INT32(time, 2);
+    status = _dissect_from_L4(pkt, len, time);
     NAPI_RETURN_UINT32(status);
 }
 
 NAPI_METHOD(protocol_L7_enable) {
     uint8_t status;
-    NAPI_ARGV(2);
-    NAPI_ARGV_BUFFER_CAST(pfwl_state_t*, state, 0);
-    NAPI_ARGV_UINT32(proto, 1);
-    status = _protocol_L7_enable(state, proto);
+    NAPI_ARGV(1);
+    NAPI_ARGV_UINT32(proto, 0);
+    status = _protocol_L7_enable(proto);
     NAPI_RETURN_UINT32(status);
 }
 
 NAPI_METHOD(protocol_L7_disable) {
     uint8_t status;
-    NAPI_ARGV(2);
-    NAPI_ARGV_BUFFER_CAST(pfwl_state_t*, state, 0);
-    NAPI_ARGV_UINT32(proto, 1);
-    status = _protocol_L7_disable(state, proto);
+    NAPI_ARGV(1);
+    NAPI_ARGV_UINT32(proto, 0);
+    status = _protocol_L7_disable(proto);
     NAPI_RETURN_UINT32(status);
 }
 
 NAPI_METHOD(guess_protocol) {
     uint8_t status;
-    NAPI_ARGV(1);
-    NAPI_ARGV_BUFFER_CAST(pfwl_dissection_info_t, g_info, 0);
-    status = _guess_protocol(g_info);
+    status = _guess_protocol();
     NAPI_RETURN_UINT32(status);
 }
 
@@ -305,29 +280,26 @@ NAPI_METHOD(get_L7_from_L2) {
 
 NAPI_METHOD(field_add_L7) {
     uint8_t status;
-    NAPI_ARGV(2);
-    NAPI_ARGV_BUFFER_CAST(pfwl_state_t*, state, 0);
-    NAPI_ARGV_UINT32(field, 1);
-    status = _field_add_L7(state, field);
+    NAPI_ARGV(1);
+    NAPI_ARGV_UINT32(field, 0);
+    status = _field_add_L7(field);
     NAPI_RETURN_UINT32(status);
 }
 
 NAPI_METHOD(field_remove_L7) {
     uint8_t status;
-    NAPI_ARGV(2);
-    NAPI_ARGV_BUFFER_CAST(pfwl_state_t*, state, 0);
-    NAPI_ARGV_UINT32(field, 1);
-    status = _field_remove_L7(state, field);
+    NAPI_ARGV(1);
+    NAPI_ARGV_UINT32(field, 0);
+    status = _field_remove_L7(field);
     NAPI_RETURN_UINT32(status);
 }
 
 NAPI_METHOD(set_protocol_accuracy_L7) {
     uint8_t status;
-    NAPI_ARGV(3);
-    NAPI_ARGV_BUFFER_CAST(pfwl_state_t*, state, 0);
-    NAPI_ARGV_UINT32(proto, 1);
-    NAPI_ARGV_UINT32(accuracy, 2);
-    status = _set_protocol_accuracy_L7(state, proto, accuracy);
+    NAPI_ARGV(2);
+    NAPI_ARGV_UINT32(proto, 0);
+    NAPI_ARGV_UINT32(accuracy, 1);
+    status = _set_protocol_accuracy_L7(proto, accuracy);
     NAPI_RETURN_UINT32(status);
 }
 
@@ -364,20 +336,10 @@ NAPI_METHOD(field_array_get_pair) {
 
 NAPI_METHOD(http_get_header) {
     uint8_t status;
-    NAPI_ARGV(3);
-    NAPI_ARGV_BUFFER_CAST(pfwl_dissection_info_t*, d_info, 0);
-    NAPI_ARGV_BUFFER(h_name, 1);
-    NAPI_ARGV_BUFFER_CAST(pfwl_string_t*, h_val, 2);
-    status = _http_get_header(d_info, h_name, h_val);
-    NAPI_RETURN_UINT32(status);
-}
-
-NAPI_METHOD(has_protocol_L7) {
-    uint8_t status;
     NAPI_ARGV(2);
-    NAPI_ARGV_BUFFER_CAST(pfwl_dissection_info_t*, d_info, 0);
-    NAPI_ARGV_UINT32(proto, 1);
-    status = _has_protocol_L7(d_info, proto);
+    NAPI_ARGV_BUFFER(h_name, 0);
+    NAPI_ARGV_BUFFER_CAST(pfwl_string_t*, h_val, 1);
+    status = _http_get_header(h_name, h_val);
     NAPI_RETURN_UINT32(status);
 }
 
@@ -418,7 +380,6 @@ NAPI_INIT() {
   NAPI_EXPORT_FUNCTION(field_number_get);
   NAPI_EXPORT_FUNCTION(field_array_get_pair);
   NAPI_EXPORT_FUNCTION(http_get_header);
-  NAPI_EXPORT_FUNCTION(has_protocol_L7);
   NAPI_EXPORT_FUNCTION(terminate);
   NAPI_EXPORT_FUNCTION(test_mul);
 }

@@ -4,6 +4,7 @@
 
 var VERSION = "1.0.0";
 var peafowl = require('../peafowl.js');
+var time = require('time');
 
 var protoL4 = ""
 var protoL7 = ""
@@ -22,11 +23,6 @@ const structs = sharedStructs(`
 		  uint64_t orig_len;
       }
 `);
-
-// Import .h for c defined struct to avoid redefinition
-const structs2 = require('shared-structs/require')('../peafowl.c');
-structs2.state();  // the state
-structs2.d_info(); // the dissection info struct
 
 /* PCAP Parser */
 var pcapp = require('pcap-parser');
@@ -83,10 +79,18 @@ pcap_parser.on('packet', function (raw_packet) {
     newHdr.orig_len = header.originalLength;
 
     // CONVERT FROM LINK TYPE TO PEAFOWL TYPE
-    pDType = peafowl.convert_pcap_dlt(LinkType);
+    var pDType = peafowl.convert_pcap_dlt(LinkType);
+
+    const STRUCT = require('shared-structs/require')('../peafowl.c');
+    const DInfo = STRUCT.dissection_info;
+    console.log(typeof STRUCT);
+    console.log(typeof DInfo);
 
     // DISSECT AND GET PROTOCOL
-    protoL7 = new Buffer.from(peafowl._dissect_from_L2( state, raw_packet.data, newHdr.orig_len, null, pDType, d_info ));
+    var status = peafowl.dissect_from_L2( raw_packet.data, newHdr.orig_len, Number(null), pDType );
+
+    if(status == 0)
+        protoL7 = new Buffer.from(DInfo.l7.protocol);
 
     // From object to String
     protoL7 = protoL7.toString();
