@@ -33,6 +33,9 @@ npm install
 ### Usage
 See our fully working [Example](https://github.com/lmangani/node-peafowl/tree/master/example) using PCAP files
 
+### Test
+You can test our example by running ```npm test```
+
 <br/>
 <br/>
 

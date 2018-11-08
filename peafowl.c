@@ -10,9 +10,9 @@
 
 
 // global definition for wrapping //
-static pfwl_state_t* state;         // the state
-static pfwl_dissection_info_t dissection_info;    // the dissection info struct
-struct pcap_pkthdr* header;  // the header of pkt
+static pfwl_state_t* state;                     // the state
+static pfwl_dissection_info_t dissection_info;  // the dissection info struct
+struct pcap_pkthdr* header;                     // the header of pkt
 
 
 /* ############## C IMPL OF PEAFOWL FUNCTIONS ############## */
@@ -103,7 +103,6 @@ pfwl_protocol_l7_t _get_L7_protocol_id(char* string)
 char* _get_L7_from_L2(char* packet, struct pcap_pkthdr* header, int link_type)
 {
     char* name = NULL;
-    /* pfwl_dissection_info_t r; */
     // convert L2 type in L2 peafowl type
     pfwl_protocol_l2_t dlt = pfwl_convert_pcap_dlt(link_type);
     // call dissection from L2
