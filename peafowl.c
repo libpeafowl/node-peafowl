@@ -8,7 +8,6 @@
 #include <time.h>
 #include "peafowl_lib/include/peafowl/peafowl.h"
 
-
 // global definition for wrapping //
 static pfwl_state_t* state;                     // the state
 static pfwl_dissection_info_t dissection_info;  // the dissection info struct
@@ -118,16 +117,18 @@ char* _get_L7_from_L2(char* packet, struct pcap_pkthdr* header, int link_type)
 
 
 // enables the extraction of a specific L7 field for a given protocol
-uint8_t _field_add_L7(pfwl_field_id_t field)
+uint8_t _field_add_L7(char* field)
 {
-    return pfwl_field_add_L7(state, field);
+    pfwl_field_id_t f = pfwl_get_L7_field_id(field);
+    return pfwl_field_add_L7(state, f);
 }
 
 
 // disables the extraction of a specific L7 field for a given protocol
-uint8_t _field_remove_L7(pfwl_field_id_t field)
+uint8_t _field_remove_L7(char* field)
 {
-    return pfwl_field_remove_L7(state, field);
+    pfwl_field_id_t f = pfwl_get_L7_field_id(field);
+    return pfwl_field_remove_L7(state, f);
 }
 
 
@@ -140,20 +141,22 @@ uint8_t _set_protocol_accuracy_L7(pfwl_protocol_l7_t protocol,
 
 
 // extracts a specific string field from a list of fields (ret = 0 string set)
-uint8_t _field_string_get(pfwl_field_t* fields,
-                          pfwl_field_id_t id,
-                          pfwl_string_t* string)
+char* _field_string_get(char* field)
 {
-    return pfwl_field_string_get(fields, id, string);
+    pfwl_string_t *string = NULL;
+    pfwl_field_id_t f = pfwl_get_L7_field_id(field);
+    pfwl_field_string_get(dissection_info.l7.protocol_fields, f, string);
+    return string->value;
 }
 
 
 // extracts a specific numeric field from a list of fields (ret = 0 number set)
-uint8_t _field_number_get(pfwl_field_t* fields,
-                          pfwl_field_id_t id,
-                          int64_t* number)
+int _field_number_get(char* field)
 {
-    return pfwl_field_number_get(fields, id, number);
+    int *num;
+    pfwl_field_id_t f = pfwl_get_L7_field_id(field);
+    pfwl_field_number_get(dissection_info.l7.protocol_fields, f, (int64_t*)num);
+    return *num;
 }
 
 
@@ -280,7 +283,7 @@ NAPI_METHOD(get_L7_from_L2) {
 NAPI_METHOD(field_add_L7) {
     uint8_t status;
     NAPI_ARGV(1);
-    NAPI_ARGV_UINT32(field, 0);
+    NAPI_ARGV_BUFFER(field, 0);
     status = _field_add_L7(field);
     NAPI_RETURN_UINT32(status);
 }
@@ -288,7 +291,7 @@ NAPI_METHOD(field_add_L7) {
 NAPI_METHOD(field_remove_L7) {
     uint8_t status;
     NAPI_ARGV(1);
-    NAPI_ARGV_UINT32(field, 0);
+    NAPI_ARGV_BUFFER(field, 0);
     status = _field_remove_L7(field);
     NAPI_RETURN_UINT32(status);
 }
@@ -303,23 +306,19 @@ NAPI_METHOD(set_protocol_accuracy_L7) {
 }
 
 NAPI_METHOD(field_string_get) {
-    uint8_t status;
-    NAPI_ARGV(3);
-    NAPI_ARGV_BUFFER_CAST(pfwl_field_t*, fields, 0);
-    NAPI_ARGV_UINT32(id, 1);
-    NAPI_ARGV_BUFFER_CAST(pfwl_string_t*, string, 2);
-    status = _field_string_get(fields, id, string);
-    NAPI_RETURN_UINT32(status);
+    char* string;
+    NAPI_ARGV(1);
+    NAPI_ARGV_BUFFER(field, 0)
+    string = _field_string_get(field);
+    NAPI_RETURN_STRING(string);
 }
 
 NAPI_METHOD(field_number_get) {
-    uint8_t status;
-    NAPI_ARGV(3);
-    NAPI_ARGV_BUFFER_CAST(pfwl_field_t*, fields, 0);
-    NAPI_ARGV_UINT32(id, 1);
-    NAPI_ARGV_BUFFER_CAST(int64_t*, number, 2);
-    status = _field_number_get(fields, id, number);
-    NAPI_RETURN_UINT32(status);
+    int num;
+    NAPI_ARGV(1);
+    NAPI_ARGV_BUFFER(field, 0)
+    num = _field_number_get(field);
+    NAPI_RETURN_INT32(num);
 }
 
 NAPI_METHOD(field_array_get_pair) {
@@ -380,6 +379,7 @@ NAPI_INIT() {
   NAPI_EXPORT_FUNCTION(field_array_get_pair);
   NAPI_EXPORT_FUNCTION(http_get_header);
   NAPI_EXPORT_FUNCTION(terminate);
+  /* ### FOR TEST ### */
   NAPI_EXPORT_FUNCTION(test_mul);
 }
 /* ############## ############## ############## */
