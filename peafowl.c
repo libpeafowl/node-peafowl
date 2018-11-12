@@ -155,8 +155,9 @@ int _field_number_get(char* field)
 {
     int *num;
     pfwl_field_id_t f = pfwl_get_L7_field_id(field);
-    pfwl_field_number_get(dissection_info.l7.protocol_fields, f, (int64_t*)num);
-    return *num;
+    if(pfwl_field_number_get(dissection_info.l7.protocol_fields, f, (int64_t*)num) == 0)
+        return *num;
+    return -1;
 }
 
 
