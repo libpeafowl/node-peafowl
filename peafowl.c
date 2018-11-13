@@ -140,6 +140,14 @@ uint8_t _set_protocol_accuracy_L7(pfwl_protocol_l7_t protocol,
 }
 
 
+// check if the field is present or not
+int _field_present(char* field)
+{
+    pfwl_field_id_t f = pfwl_get_L7_field_id(field);
+    return dissection_info.l7.protocol_fields[f].present;
+}
+
+
 // extracts a specific string field from a list of fields (ret = 0 string set)
 char* _field_string_get(char* field)
 {
@@ -153,21 +161,10 @@ char* _field_string_get(char* field)
 // extracts a specific numeric field from a list of fields (ret = 0 number set)
 int _field_number_get(char* field)
 {
-    int *num;
+    int *num = NULL;
     pfwl_field_id_t f = pfwl_get_L7_field_id(field);
-    if(pfwl_field_number_get(dissection_info.l7.protocol_fields, f, (int64_t*)num) == 0)
-        return *num;
-    return -1;
-}
-
-
-// extracts a pair in a specific position, from a specific array field (ret = 0 pair set)
-uint8_t _field_array_get_pair(pfwl_field_t *fields,
-                              pfwl_field_id_t id,
-                              size_t position,
-                              pfwl_pair_t *pair)
-{
-    return pfwl_field_array_get_pair(fields, id, position, pair);
+    pfwl_field_number_get(dissection_info.l7.protocol_fields, f, (int64_t*)num);
+    return *num;
 }
 
 
@@ -306,6 +303,14 @@ NAPI_METHOD(set_protocol_accuracy_L7) {
     NAPI_RETURN_UINT32(status);
 }
 
+NAPI_METHOD(field_present) {
+    int status;
+    NAPI_ARGV(1);
+    NAPI_ARGV_BUFFER(field, 0)
+    status = _field_present(field);
+    NAPI_RETURN_INT32(status);
+}
+
 NAPI_METHOD(field_string_get) {
     char* string;
     NAPI_ARGV(1);
@@ -320,17 +325,6 @@ NAPI_METHOD(field_number_get) {
     NAPI_ARGV_BUFFER(field, 0)
     num = _field_number_get(field);
     NAPI_RETURN_INT32(num);
-}
-
-NAPI_METHOD(field_array_get_pair) {
-    uint8_t status;
-    NAPI_ARGV(4);
-    NAPI_ARGV_BUFFER_CAST(pfwl_field_t*, fields, 0);
-    NAPI_ARGV_UINT32(id, 1);
-    NAPI_ARGV_UINT32(pos, 2);
-    NAPI_ARGV_BUFFER_CAST(pfwl_pair_t*, pair, 3);
-    status = _field_array_get_pair(fields, id, pos, pair);
-    NAPI_RETURN_UINT32(status);
 }
 
 NAPI_METHOD(http_get_header) {
@@ -377,7 +371,6 @@ NAPI_INIT() {
   NAPI_EXPORT_FUNCTION(set_protocol_accuracy_L7);
   NAPI_EXPORT_FUNCTION(field_string_get);
   NAPI_EXPORT_FUNCTION(field_number_get);
-  NAPI_EXPORT_FUNCTION(field_array_get_pair);
   NAPI_EXPORT_FUNCTION(http_get_header);
   NAPI_EXPORT_FUNCTION(terminate);
   /* ### FOR TEST ### */
