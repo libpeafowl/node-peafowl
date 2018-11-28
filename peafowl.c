@@ -176,11 +176,11 @@ uint8_t _http_get_header(char *header_name,
 }
 
 // extract specific HTTP header (ret = 0, header_value is set)
-uint8_t _http_get_header_value(char *header_name)
+char* _http_get_header_value(char *header_name)
 {
     pfwl_string_t *header_value = NULL;
     pfwl_http_get_header(&dissection_info, header_name, header_value);
-    return string->value;
+    return header_value->value;
 }
 
 
