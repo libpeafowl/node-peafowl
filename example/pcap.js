@@ -40,6 +40,11 @@ counter = 0;
 console.log('Initializing...');
 peafowl.init();
 
+/* EXTRACTION */
+var buf = Buffer.from('DNS_NAME_SRV');
+peafowl.field_add_L7(buf)
+
+
 // L2 type
 var pcap = require('pcap');
 var pcap_session = pcap.createOfflineSession(process.argv[2], "");
@@ -93,15 +98,10 @@ pcap_parser.on('packet', function (raw_packet) {
     }
 
     // Add some fields to be extracted
-    var field = 'DNS_NAME_SRV';
-    var bufferNull = new Buffer([0x00]);
-    var buf = Buffer.concat([Buffer.from(field, 'utf8'), bufferNull]);
-
-    console.log("RET = ", peafowl.field_add_L7(buf));
+    var buf = Buffer.from('DNS_NAME_SRV');
     if (peafowl.field_present(buf)) {
-        console.log("XXXXXX", buf.toString());
         var NameServer = peafowl.field_string_get(buf);
-        console.log("DNS Name Server = ", NameServer.toString());
+        console.log('EXTRACT:', buf.toString(), NameServer.toString());
     }
 });
 
