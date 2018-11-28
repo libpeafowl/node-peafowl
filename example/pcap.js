@@ -91,6 +91,18 @@ pcap_parser.on('packet', function (raw_packet) {
         packetStats.bytes[ protoL7 ] += raw_packet.data.length;
         packetStats.count[ protoL7 ] += 1;
     }
+
+    // Add some fields to be extracted
+    var field = 'DNS_NAME_SRV';
+    var bufferNull = new Buffer([0x00]);
+    var buf = Buffer.concat([Buffer.from(field, 'utf8'), bufferNull]);
+
+    console.log("RET = ", peafowl.field_add_L7(buf));
+    if (peafowl.field_present(buf)) {
+        console.log("XXXXXX", buf.toString());
+        var NameServer = peafowl.field_string_get(buf);
+        console.log("DNS Name Server = ", NameServer.toString());
+    }
 });
 
 pcap_parser.on('end', function () {

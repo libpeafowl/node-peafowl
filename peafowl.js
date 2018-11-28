@@ -17,11 +17,12 @@ module.exports = {
     get_L7_from_L2: bindings.get_L7_from_L2,
     field_add_L7: bindings.field_add_L7,
     field_remove_L7: bindings.field_remove_L7,
+    field_present: bindings.field_present,
     set_protocol_accuracy_L7: bindings.set_protocol_accuracy_L7,
     field_string_get: bindings.field_string_get,
     field_number_get: bindings.field_number_get,
     field_array_get_pair: bindings.field_array_get_pair,
-    http_get_header: bindings.http_get_header,
-    http_get_header_value: bindings.http_get_header_value,
+    // http_get_header: bindings.http_get_header,
+    // http_get_header_value: bindings.http_get_header_value,
     terminate: bindings.terminate
 };
