@@ -175,6 +175,14 @@ uint8_t _http_get_header(char *header_name,
     return pfwl_http_get_header(&dissection_info, header_name, header_value);
 }
 
+// extract specific HTTP header (ret = 0, header_value is set)
+uint8_t _http_get_header_value(char *header_name)
+{
+    pfwl_string_t *header_value = NULL;
+    pfwl_http_get_header(&dissection_info, header_name, header_value);
+    return string->value;
+}
+
 
 // terminate
 void _terminate()
@@ -336,6 +344,14 @@ NAPI_METHOD(http_get_header) {
     NAPI_RETURN_UINT32(status);
 }
 
+NAPI_METHOD(http_get_header_value) {
+    char* header_value;
+    NAPI_ARGV(1);
+    NAPI_ARGV_BUFFER(h_name, 0);
+    header_value = _http_get_header_value(h_name);
+    NAPI_RETURN_STRING(header_value);
+}
+
 NAPI_METHOD(terminate) {
   _terminate();
   return NULL;
@@ -372,6 +388,7 @@ NAPI_INIT() {
   NAPI_EXPORT_FUNCTION(field_string_get);
   NAPI_EXPORT_FUNCTION(field_number_get);
   NAPI_EXPORT_FUNCTION(http_get_header);
+  NAPI_EXPORT_FUNCTION(http_get_header_value);
   NAPI_EXPORT_FUNCTION(terminate);
   /* ### FOR TEST ### */
   NAPI_EXPORT_FUNCTION(test_mul);

@@ -22,5 +22,6 @@ module.exports = {
     field_number_get: bindings.field_number_get,
     field_array_get_pair: bindings.field_array_get_pair,
     http_get_header: bindings.http_get_header,
+    http_get_header_value: bindings.http_get_header_value,
     terminate: bindings.terminate
 };
