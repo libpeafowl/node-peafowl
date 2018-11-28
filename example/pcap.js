@@ -40,8 +40,10 @@ counter = 0;
 console.log('Initializing...');
 peafowl.init();
 
-/* EXTRACTION */
+/* EXTRACTION SETUP */
 var buf = Buffer.from('DNS_NAME_SRV');
+peafowl.field_add_L7(buf)
+var buf = Buffer.from('HTTP_BODY');
 peafowl.field_add_L7(buf)
 
 
@@ -72,6 +74,9 @@ pcap_session.on('packet', function (raw_packet) {
     }
 });
 
+var http_count = 0;
+var dns_count = 0;
+
 pcap_parser.on('packet', function (raw_packet) {
     counter++;
     var header = raw_packet.header;
@@ -97,11 +102,25 @@ pcap_parser.on('packet', function (raw_packet) {
         packetStats.count[ protoL7 ] += 1;
     }
 
+    // Add http header extraction
+    if(protoL7 == 'HTTP' && http_count < 1){
+       // Add some fields to be extracted
+       var buf = Buffer.from('HTTP_BODY');
+       if (peafowl.field_present(buf)) {
+          var HttpBody = peafowl.field_string_get(buf);
+          console.log('HTTP EXTRACT:', buf.toString(), HttpBody.toString());
+	  http_count++;
+       }
+    }
+
     // Add some fields to be extracted
-    var buf = Buffer.from('DNS_NAME_SRV');
-    if (peafowl.field_present(buf)) {
-        var NameServer = peafowl.field_string_get(buf);
-        console.log('EXTRACT:', buf.toString(), NameServer.toString());
+    if(protoL7 == 'DNS' && dns_count < 1){
+      var buf = Buffer.from('DNS_NAME_SRV');
+      if (peafowl.field_present(buf)) {
+          var NameServer = peafowl.field_string_get(buf);
+          console.log('DNS EXTRACT:', buf.toString(), NameServer.toString());
+	  dns_count++;
+      }
     }
 });
 

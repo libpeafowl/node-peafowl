@@ -168,21 +168,16 @@ int _field_number_get(char* field)
 }
 
 
-/* // extract specific HTTP header (ret = 0, header_value is set) */
-/* uint8_t _http_get_header(char *header_name, */
-/*                          pfwl_string_t *header_value) */
-/* { */
-/*     return pfwl_http_get_header(&dissection_info, header_name, header_value); */
-/* } */
-
-/* // extract specific HTTP header (ret = 0, header_value is set) */
-/* char* _http_get_header_value(char *header_name) */
-/* { */
-/*     pfwl_string_t *header_value = NULL; */
-/*     pfwl_http_get_header(&dissection_info, header_name, header_value); */
-/*     return header_value->value; */
-/* } */
-
+/*
+// extract specific HTTP header (ret string)
+char* _http_get_header_value(char *header_name)
+{
+    pfwl_string_t header_value;
+    pfwl_field_id_t f = pfwl_get_L7_field_id(header_name);
+    pfwl_http_get_header(&dissection_info, header_name, &header_value);
+    return header_value.value;
+}
+*/
 
 // terminate
 void _terminate()
@@ -335,22 +330,15 @@ NAPI_METHOD(field_number_get) {
     NAPI_RETURN_INT32(num);
 }
 
-/* NAPI_METHOD(http_get_header) { */
-/*     uint8_t status; */
-/*     NAPI_ARGV(2); */
-/*     NAPI_ARGV_BUFFER(h_name, 0); */
-/*     NAPI_ARGV_BUFFER_CAST(pfwl_string_t*, h_val, 1); */
-/*     status = _http_get_header(h_name, h_val); */
-/*     NAPI_RETURN_UINT32(status); */
-/* } */
-
-/* NAPI_METHOD(http_get_header_value) { */
-/*     char* header_value; */
-/*     NAPI_ARGV(1); */
-/*     NAPI_ARGV_BUFFER(h_name, 0); */
-/*     header_value = _http_get_header_value(h_name); */
-/*     NAPI_RETURN_STRING(header_value); */
-/* } */
+/*
+NAPI_METHOD(http_get_header_value) {
+    char* header_value;
+    NAPI_ARGV(1);
+    NAPI_ARGV_BUFFER(h_name, 0);
+    header_value = _http_get_header_value(h_name);
+    NAPI_RETURN_STRING(header_value);
+}
+*/
 
 NAPI_METHOD(terminate) {
   _terminate();
@@ -388,8 +376,7 @@ NAPI_INIT() {
   NAPI_EXPORT_FUNCTION(set_protocol_accuracy_L7);
   NAPI_EXPORT_FUNCTION(field_string_get);
   NAPI_EXPORT_FUNCTION(field_number_get);
-  /* NAPI_EXPORT_FUNCTION(http_get_header); */
-  /* NAPI_EXPORT_FUNCTION(http_get_header_value); */
+  /*NAPI_EXPORT_FUNCTION(http_get_header_value); */
   NAPI_EXPORT_FUNCTION(terminate);
   /* ### FOR TEST ### */
   NAPI_EXPORT_FUNCTION(test_mul);
