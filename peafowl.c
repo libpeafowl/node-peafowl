@@ -151,10 +151,10 @@ int _field_present(char* field)
 // extracts a specific string field from a list of fields (ret = 0 string set)
 char* _field_string_get(char* field)
 {
-    pfwl_string_t *string = NULL;
+    pfwl_string_t string;
     pfwl_field_id_t f = pfwl_get_L7_field_id(field);
-    pfwl_field_string_get(dissection_info.l7.protocol_fields, f, string);
-    return string->value;
+    pfwl_field_string_get(dissection_info.l7.protocol_fields, f, &string);
+    return string.value;
 }
 
 
