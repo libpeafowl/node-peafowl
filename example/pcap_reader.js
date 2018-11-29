@@ -78,9 +78,8 @@ async function doPcaps () {
 	var LinkType = -1;
 	pcap_parser.on('globalHeader', function (globalHeader) {
 		LinkType = globalHeader.linkLayerType;
-		console.log('Set LinkType',LinkType);
+		// console.log('Set LinkType',LinkType);
 	})
-
 	pcap_parser.on('packet', function (raw_packet) {
 	    counter++;
 
@@ -140,11 +139,10 @@ async function doPcaps () {
 	});
 
 	pcap_parser.on('end', function () {
-	    console.log('Terminating...');
+	    // console.log('Terminating...');
 	    // peafowl.terminate();
 	});
 
-        console.log('Next...');
   }
 }
 

@@ -52,6 +52,7 @@ var pcap = require('pcap');
 var pcap_session = pcap.createOfflineSession(process.argv[2], "");
 var LinkType = -1;
 pcap_session.on('packet', function (raw_packet) {
+    peafowl.init();
     var packet = pcap.decode.packet(raw_packet);
     LinkType = packet.link_type;
     switch (LinkType) {
