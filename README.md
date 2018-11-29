@@ -58,10 +58,10 @@ You can test our example by running ```npm test```
 #### Extraction Functions
 | function  | parameters  |  description |
 |---|---|---|
-| field_add_L7()  | (string Buffer) |  Initialize extraction for the selected protocol field |
-| field_present() | (string Buffer) | Check if an extraction is present in a processed packet |
-| field_number_get | (string Buffer) | Return the extracted value as int * |
-| field_string_get | (string Buffer) | Return the extracted value as char * |
+| _field_add_L7_ | (_string_ Buffer) |  Initialize extraction for the selected protocol field |
+| _field_present_ | (_string_ Buffer) | Check if an extraction is present in a processed packet |
+| _field_number_get_ | (_string_ Buffer) | Return the extracted value as int * |
+| _field_string_get_ | (_string_ Buffer) | Return the extracted value as char * |
 
 
 
