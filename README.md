@@ -26,19 +26,19 @@ npm install
 ### Usage
 ```javascript
 /* INITIALIZE LIBRARY */
-peafowl.init();
+peaFowl.init();
 
 /* DISSECT PACKETS AND RESOLVE PROTOCOL NAME */
-peafowl.get_L7_from_L2( PCAP_packet, PCAP_header, PCAP_LinkType ) );
+peaFowl.get_L7_from_L2( PCAP_packet, PCAP_header, PCAP_LinkType ) );
 
 /* EXTRACTION SETUP */
 var buf = Buffer.from('DNS_NAME_SRV');
-peafowl.field_add_L7(buf)
+peaFowl.field_add_L7(buf)
 
 /* EXTRACT PROTOCOL FIELDS */
 var field = Buffer.from('DNS_NAME_SRV')
-if (peafowl.field_present(field)) {
-         console.log( peafowl.field_string_get(field) );
+if (peaFowl.field_present(field)) {
+         console.log( peaFowl.field_string_get(field) );
 }
 ```
 See a fully working [Example](https://github.com/lmangani/node-peafowl/tree/master/example) using PCAP files
@@ -74,7 +74,7 @@ You can test our example by running ```npm test```
 
 ### Credits & Acknowledgements
 
-Peafowl has been mainly developed by [Daniele De Sensi](https://github.com/DanieleDeSensi)
+Peafowl has been mainly developed by Dr. [Daniele De Sensi](https://github.com/DanieleDeSensi)
 
 Node-Peafowl is developed by [L. Mangani](https://github.com/lmangani), [M. Campus](https://github.com/kYroL01) using the awesome [NAPI-macros](https://github.com/mafintosh/napi-macros) by [Mathias Buus](https://github.com/mafintosh)
 
