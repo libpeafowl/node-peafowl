@@ -30,6 +30,15 @@ npm install
 | _terminate_ | (void) | Teardown the library |
 | _get_L7_protocol_name_ | (packet, header, link type) | Dissect and return Protocol name as char * (l7) |
 
+#### Extraction Functions
+| function  | parameters  |  description |
+|---|---|---|
+| field_add_L7()  | (string Buffer) |  Initialize extraction for the selected protocol field |
+| field_present() | (string Buffer) | Check if an extraction is present in a processed packet |
+| field_number_get | (string Buffer) | Return the extracted value as int * |
+| field_string_get | (string Buffer) | Return the extracted value as char * |
+
+
 ### Usage
 See our fully working [Example](https://github.com/lmangani/node-peafowl/tree/master/example) using PCAP files
 
