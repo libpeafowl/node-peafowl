@@ -161,9 +161,9 @@ char* _field_string_get(char* field)
 // extracts a specific numeric field from a list of fields (ret = 0 number set)
 int _field_number_get(char* field)
 {
-    int num;
+    int64_t num;
     pfwl_field_id_t f = pfwl_get_L7_field_id(field);
-    pfwl_field_number_get(dissection_info.l7.protocol_fields, f, (int64_t*)&num);
+    pfwl_field_number_get(dissection_info.l7.protocol_fields, f, &num);
     return num;
 }
 

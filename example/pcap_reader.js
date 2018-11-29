@@ -20,12 +20,30 @@ console.log('Initializing...');
 peafowl.init();
 
 /* EXTRACTION SETUP */
-var protos = param('protocols');
-protos.forEach(function(proto){
-  console.log('Configuring extractions for:',proto.name);
-  proto.extract.forEach(function(proto){
-	var buf = Buffer.from(proto);
-	peafowl.field_add_L7(buf);
+var pcaps = param('pcap');
+pcaps.forEach(function(file){
+  if (!file.enable) return;
+  file.protocols.forEach(function(proto){
+    if(proto.rules){
+    	proto.rules.forEach(function(proto){
+	  console.log('Extraction rule for:',proto);
+	  var buf = Buffer.from(proto);
+	  peafowl.field_add_L7(buf);
+    	});
+
+    } else if (proto.extract_int){
+    	proto.extract_int.forEach(function(proto){
+	  console.log('Extraction rule for:',proto);
+	  var buf = Buffer.from(proto);
+	  peafowl.field_add_L7(buf);
+    	});
+    } else if (proto.extract_str){
+    	proto.extract_str.forEach(function(proto){
+	  console.log('Extraction rule for:',proto);
+	  var buf = Buffer.from(proto);
+	  peafowl.field_add_L7(buf);
+    	});
+    }
   });
 });
 
@@ -47,22 +65,14 @@ const structs = sharedStructs(`
 
 var pcaps = param('pcap');
 if (pcaps.length < 1) process.exit();
-/*
-pcaps.forEach(function(pcap){
-	if (pcap.file) {
-	    console.log('Loading PCAP..',pcap.file);
-	    var filename = pcap.file;
-	    pcap_parser = pcapp.parse(filename);
-
-	} else {
-	    console.error("file not found:",filename);
-	}
-});
-*/
 
 async function doPcaps () {
   for (const pcap of pcaps) {
 
+	if (!pcap.enable || !pcap.file) {
+		console.log('Bypassing..',pcap.file);
+		continue;
+	}
     	var pcap_parser = await pcapp.parse(pcap.file);
 	// L2 type
 	var LinkType = -1;
@@ -89,7 +99,7 @@ async function doPcaps () {
 
 	    // From object to String
 	    protoL7 = protoL7.toString();
-	    console.log("L7: ", protoL7);
+	    // console.log("L7: ", protoL7);
 	    var tmpStats = packetStats.bytes[ protoL7 ];
 	    if (!tmpStats) {
 	        packetStats.bytes[ protoL7 ] = raw_packet.data.length;
@@ -100,17 +110,31 @@ async function doPcaps () {
 	    }
 
 	    // Add header extraction from config file
-	    var xprotos = JSON.parse(JSON.stringify(protos));;
-	    xprotos.forEach(function(proto){
+	    // var xprotos = JSON.parse(JSON.stringify(protos));;
+	    pcap.protocols.forEach(function(proto){
 	      if(proto.name == protoL7){
-		 proto.extract.forEach(function(rule){
+		if(proto.extract_str){
+		 proto.extract_str.forEach(function(rule){
 		       var buf = Buffer.from(rule);
-		       if (peafowl.field_present(buf) && proto.max > 0) {
+		       //console.log('TRY EXTRACT STR',rule,peafowl.field_present(buf))
+		       if (peafowl.field_present(buf) && proto.max >0 ) {
 		          var Body = peafowl.field_string_get(buf);
-		          console.log('EXTRACT:', buf.toString(), Body.toString());
+		          console.log('EXTRACT STR:',proto.max,'CONTENT:', buf.toString(), Body.toString());
 			  proto.max--;
 		       }
 		 });
+		} else if(proto.extract_int){
+		 proto.extract_int.forEach(function(rule){
+		       var buf = Buffer.from(rule);
+		       //console.log('TRY EXTRACT NUM',rule,peafowl.field_present(buf))
+		       if (peafowl.field_present(buf) && proto.max >0 ) {
+		          var Body = peafowl.field_number_get(buf);
+		          console.log('EXTRACT NUM:',proto.max,'CONTENT:', buf.toString(), Body.toString());
+			  proto.max--;
+		       }
+		 });
+		}
+
 	      }
 	    });
 	});
