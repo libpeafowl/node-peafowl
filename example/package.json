@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "param": "^1.1.0",
     "pcap-parser": "^0.2.1",
     "shared-structs": "^1.3.3"
   }
