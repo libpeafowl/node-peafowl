@@ -1,0 +1,9 @@
+{
+    "pcap": {
+        "file": "./pcap/http.pcap"
+    },
+    "protocols": [
+	{ "name": "DNS", "extract": ["DNS_NAME_SRV"], "max": 3 },
+	{ "name": "HTTP", "extract": ["HTTP_BODY"], "max": 1 }
+    ]
+}
