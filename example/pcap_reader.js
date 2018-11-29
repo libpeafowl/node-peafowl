@@ -53,9 +53,11 @@ protos.forEach(function(proto){
 });
 
 // L2 type
+var LinkType = -1;
+/*
 var pcap = require('pcap');
 var pcap_session = pcap.createOfflineSession(filename, "");
-var LinkType = -1;
+
 pcap_session.on('packet', function (raw_packet) {
     var packet = pcap.decode.packet(raw_packet);
     LinkType = packet.link_type;
@@ -78,9 +80,16 @@ pcap_session.on('packet', function (raw_packet) {
         console.log("Datalink type not supported");
     }
 });
+*/
+
+pcap_parser.on('globalHeader', function (globalHeader) {
+	LinkType = globalHeader.linkLayerType;
+	console.log('Set LinkType',LinkType);
+})
 
 pcap_parser.on('packet', function (raw_packet) {
     counter++;
+
     var header = raw_packet.header;
     // Build PCAP Hdr Struct
     var newHdr = structs.pcap();
