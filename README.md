@@ -40,7 +40,7 @@ npm install
 
 
 ### Usage
-```
+```javascript
 /* INITIALIZE LIBRARY */
 peafowl.init();
 
