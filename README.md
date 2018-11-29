@@ -1,9 +1,9 @@
 
 
-<img src="https://i.imgur.com/jrQX0Of.gif" width=250> 
+<img src="https://i.imgur.com/jrQX0Of.gif" width=250>
 
 # node-Peafowl
-Native Node Bindings for the [Peafowl DPI Library](https://github.com/DanieleDeSensi/Peafowl) 
+Native Node Bindings for the [Peafowl DPI Library](https://github.com/DanieleDeSensi/Peafowl)
 
 [![Build Status](https://travis-ci.org/libpeafowl/node-peafowl.svg?branch=master)](https://travis-ci.org/libpeafowl/node-peafowl)
 [![dependencies Status](https://david-dm.org/libpeafowl/node-peafowl/status.svg)](https://david-dm.org/libpeafowl/node-peafowl)
@@ -23,17 +23,31 @@ The install script will automatically attempt compiling peafowl and building nod
 npm install
 ```
 
-#### Functions
-| function  | parameters  |  description | 
+#### Main Functions
+| function  | parameters  |  description |
 |---|---|---|
-| pfw_init  | void  |  Initialize the library for statefull env |
-|  pfw_terminate | void  | Teardown the library |
-| pfw_get_protocol_l4  | struct pcap_pkthdr *, header  | Dissect and return Protocol name as char * (l4) |
-| pfw_get_protocol_l7  | struct pcap_pkthdr *, header  | Dissect and return Protocol name as char * (l7) |
-| pfw_get_protocol_pair  | struct pcap_pkthdr *, header  | Dissect and return Protocol Pair (l4,l7) |
+| _init_  | (void) |  Initialize the library for statefull env |
+| _terminate_ | (void) | Teardown the library |
+| _get_L7_protocol_name_ | (packet, header, link type) | Dissect and return Protocol name as char * (l7) |
+
+#### Extraction Functions
+| function  | parameters  |  description |
+|---|---|---|
+| field_add_L7()  | (string Buffer) |  Initialize extraction for the selected protocol field |
+| field_present() | (string Buffer) | Check if an extraction is present in a processed packet |
+| field_number_get | (string Buffer) | Return the extracted value as int * |
+| field_string_get | (string Buffer) | Return the extracted value as char * |
+
 
 ### Usage
 See our fully working [Example](https://github.com/lmangani/node-peafowl/tree/master/example) using PCAP files
+
+### Test
+You can test our example by running ```npm test```
+
+### Todo
+* Implement int64 response from library
+* Add more test cases
 
 <br/>
 <br/>
@@ -52,4 +66,3 @@ If you use Peafowl or Node-Peafowl for scientific purposes, please cite the foll
 ```"Deep Packet Inspection on Commodity Hardware using FastFlow", M. Danelutto, L. Deri, D. De Sensi, M. Torquati```
 
 ###### This Project is sponsored by [QXIP BV](http://qxip.net)
-

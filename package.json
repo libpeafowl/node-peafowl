@@ -3,14 +3,16 @@
   "version": "1.0.6",
   "description": "Peafowl DPI for NodeJS",
   "dependencies": {
-    "napi-macros": "^1.4.1",
+    "napi-macros": "^1.8.1",
+    "node-addon-api": "^1.5.0",
     "node-gyp-build": "^3.2.2",
-    "shared-structs": "^1.3.3"
+    "shared-structs": "^1.3.3",
+    "time": "^0.12.0"
   },
   "scripts": {
     "preinstall": "./compile.sh",
     "install": "node-gyp-build",
-    "test": "cd example && npm install && cd .. && node example/pcap.js example/pcap/http.pcap"
+    "test": "cd example && npm install && node pcap_reader.js"
   },
   "main": "peafowl.js",
   "directories": {

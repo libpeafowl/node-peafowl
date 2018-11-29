@@ -5,9 +5,9 @@
       "<!(node -e \"require('napi-macros')\")"
     ],
     "include_dirs": [
-            "./include", "../peafowl_lib/lib"
+            "<(module_root_dir)/include", "<(module_root_dir)/peafowl_lib/include", "./node_modules/node-addon-api/src"
     ],
-    "libraries": ["<(module_root_dir)/include/libdpi.so"],
-    "sources": [ "./peafowl.c" ]
+    "sources": [ "./peafowl.c" ],
+    "libraries": ["-Wl,-rpath,<(module_root_dir)/peafowl_lib/build/src/ -L<(module_root_dir)/peafowl_lib/build/src/ -lpeafowl"]
   }]
 }

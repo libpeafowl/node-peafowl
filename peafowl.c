@@ -6,162 +6,344 @@
 #include <netinet/in.h>
 #include <pcap.h>
 #include <time.h>
-#include "peafowl_lib/src/api.h"
+#include "peafowl_lib/include/peafowl/peafowl.h"
 
-#define SIZE_IPv4_FLOW_TABLE 32767
-#define SIZE_IPv6_FLOW_TABLE 32767
-#define MAX_IPv4_ACTIVE_FLOWS 500000
-#define MAX_IPv6_ACTIVE_FLOWS 500000
+// global definition for wrapping //
+static pfwl_state_t* state;                     // the state
+static pfwl_dissection_info_t dissection_info;  // the dissection info struct
+struct pcap_pkthdr* header;                     // the header of pkt
 
-#define BUFF 10
 
-dpi_library_state_t* state; // the state
-
-struct pcap_pkthdr* header;
-
+/* ############## C IMPL OF PEAFOWL FUNCTIONS ############## */
 // init state
-int init()
+int b_init()
 {
   // C function from Peafowl lib
-  state = dpi_init_stateful(SIZE_IPv4_FLOW_TABLE, SIZE_IPv6_FLOW_TABLE, MAX_IPv4_ACTIVE_FLOWS, MAX_IPv6_ACTIVE_FLOWS);
+  state = pfwl_init();
   if(state == NULL) {
-    fprintf(stderr, "dpi_init_stateful ERROR\n");
-    return -1; // ERROR
+      fprintf(stderr, "peafowl init ERROR\n");
+      return -1; // ERROR
   }
-
-  return 0; 
+  return 0;
 }
 
-// identify protocols name L7
-char * get_protocol_l7(char* packet, struct pcap_pkthdr *header)
+
+// Converts a pcap datalink type to a pfwl_datalink_type_t
+pfwl_protocol_l2_t _convert_pcap_dlt(int link_type)
 {
-  dpi_identification_result_t r;
-  char* name = NULL;
-
-  r = dpi_get_protocol(state, (const u_char*) packet+sizeof(struct ether_header),
-		       header->len-sizeof(struct ether_header), time(NULL));
-
-  name = calloc(BUFF, sizeof(char));
-  if(name == NULL) {
-    fprintf(stderr, "calloc ERROR\n");
-    return NULL; // ERROR
-  }
-  name = dpi_get_protocol_string(r.protocol.l7prot);
-
-  return name;    
-
+    return pfwl_convert_pcap_dlt(link_type);
 }
 
-// identify protocols name L4
-char * get_protocol_l4(char* packet, struct pcap_pkthdr *header)
+
+// parse packet from L2
+pfwl_status_t _dissect_from_L2(char* packet, uint32_t length,
+                               uint32_t timestamp, pfwl_protocol_l2_t datalink_type)
 {
-  dpi_identification_result_t r;
-  char* name = NULL;
-
-  r = dpi_get_protocol(state, (const u_char*) packet+sizeof(struct ether_header),
-		       header->len-sizeof(struct ether_header), time(NULL));
-
-  name = calloc(BUFF, sizeof(char));
-  if(name == NULL){
-    fprintf(stderr, "calloc ERROR\n");
-    return NULL; // ERROR
-  }
-
-  // Check for L4
-  if(r.protocol.l4prot == IPPROTO_UDP){
-    memcpy(name, "UDP", 3);
-    return name;
-  } else if(r.protocol.l4prot == IPPROTO_TCP){
-    memcpy(name, "TCP", 3);
-    return name;
-  }
-  memcpy(name, "Unknow", strlen("Unknow"));
-  return name;
+    return pfwl_dissect_from_L2(state, (const u_char*) packet,
+                                length, time(NULL),
+                                datalink_type, &dissection_info);
 }
 
-// identify protocols pairs [L7,L4]
-char * get_protocol_pair(char* packet, struct pcap_pkthdr *header)
-{
-  dpi_identification_result_t r;
-  char * res;
-  
-  res = malloc(2 * sizeof(char));
-  if(res == NULL){
-    fprintf(stderr, "malloc ERROR\n");
-    return NULL; // ERROR
-  }
-  memset(res,-1,2);
 
-  r = dpi_get_protocol(state, (const u_char*) packet+sizeof(struct ether_header),
-		       header->len-sizeof(struct ether_header), time(NULL));
-  
-  if(r.protocol.l4prot == IPPROTO_UDP){
-    res[0] = IPPROTO_UDP;
-    if(r.protocol.l7prot < DPI_NUM_UDP_PROTOCOLS){
-      /* stats.parsed_packets++; */
-      res[1] = r.protocol.l7prot;
-      return res;
+// parse packet from L3
+pfwl_status_t _dissect_from_L3(char* packet_fromL3, uint32_t length_fromL3,
+                               uint32_t timestamp)
+{
+    return pfwl_dissect_from_L3(state, (const u_char*) packet_fromL3,
+                                length_fromL3, time(NULL), &dissection_info);
+}
+
+
+// parse packet from L4
+pfwl_status_t _dissect_from_L4(char* packet_fromL4, uint32_t length_fromL4,
+                               uint32_t timestamp)
+{
+    return pfwl_dissect_from_L3(state, (const u_char*) packet_fromL4,
+                                length_fromL4, time(NULL), &dissection_info);
+}
+
+
+// enables an L7 protocol dissector
+uint8_t _protocol_L7_enable(pfwl_protocol_l7_t protocol)
+{
+    return pfwl_protocol_l7_enable(state, protocol);
+}
+
+
+// disables an L7 protocol dissector
+uint8_t _protocol_L7_disable(pfwl_protocol_l7_t protocol)
+{
+    return pfwl_protocol_l7_disable(state, protocol);
+}
+
+
+// guesses the protocol looking only at source/destination ports
+pfwl_protocol_l7_t _guess_protocol()
+{
+    return pfwl_guess_protocol(dissection_info);
+}
+
+
+// returns the string represetation of a protocol
+char* _get_L7_protocol_name(pfwl_protocol_l7_t protocol)
+{
+    return pfwl_get_L7_protocol_name(protocol);
+}
+
+
+// returns the protocol id corresponding to a protocol string
+pfwl_protocol_l7_t _get_L7_protocol_id(char* string)
+{
+    return pfwl_get_L7_protocol_id(string);
+}
+
+
+// dissect pachet from L2 and return the L7 protocol name
+char* _get_L7_from_L2(char* packet, struct pcap_pkthdr* header, int link_type)
+{
+    char* name = NULL;
+    // convert L2 type in L2 peafowl type
+    pfwl_protocol_l2_t dlt = pfwl_convert_pcap_dlt(link_type);
+    // call dissection from L2
+    pfwl_status_t status = pfwl_dissect_from_L2(state, (const u_char*) packet,
+                                                header->caplen, time(NULL), dlt, &dissection_info);
+
+    if(status >= PFWL_STATUS_OK) {
+        name = pfwl_get_L7_protocol_name(dissection_info.l7.protocol);
+        return name;
     }
-  } else if(r.protocol.l4prot == IPPROTO_TCP){
-    res[0] = IPPROTO_TCP;
-    if(r.protocol.l7prot < DPI_NUM_TCP_PROTOCOLS){
-      /* stats.parsed_packets++; */
-      res[1] = DPI_NUM_UDP_PROTOCOLS + r.protocol.l7prot;
-      return res;
-    }
-  }
-  return res;
+    else return "ERROR";
 }
+
+
+// enables the extraction of a specific L7 field for a given protocol
+uint8_t _field_add_L7(char* field)
+{
+    pfwl_field_id_t f = pfwl_get_L7_field_id(field);
+    return pfwl_field_add_L7(state, f);
+}
+
+
+// disables the extraction of a specific L7 field for a given protocol
+uint8_t _field_remove_L7(char* field)
+{
+    pfwl_field_id_t f = pfwl_get_L7_field_id(field);
+    return pfwl_field_remove_L7(state, f);
+}
+
+
+// set the accuracy level of dissection
+uint8_t _set_protocol_accuracy_L7(pfwl_protocol_l7_t protocol,
+                                  pfwl_dissector_accuracy_t accuracy)
+{
+    return pfwl_set_protocol_accuracy_L7(state, protocol, accuracy);
+}
+
+
+// check if the field is present or not
+int _field_present(char* field)
+{
+    pfwl_field_id_t f = pfwl_get_L7_field_id(field);
+    return dissection_info.l7.protocol_fields[f].present;
+}
+
+
+// extracts a specific string field from a list of fields (ret = 0 string set)
+char* _field_string_get(char* field)
+{
+    pfwl_string_t string;
+    pfwl_field_id_t f = pfwl_get_L7_field_id(field);
+    pfwl_field_string_get(dissection_info.l7.protocol_fields, f, &string);
+    return string.value;
+}
+
+
+// extracts a specific numeric field from a list of fields (ret = 0 number set)
+int _field_number_get(char* field)
+{
+    int64_t num;
+    pfwl_field_id_t f = pfwl_get_L7_field_id(field);
+    pfwl_field_number_get(dissection_info.l7.protocol_fields, f, &num);
+    return num;
+}
+
+
+/*
+// extract specific HTTP header (ret string)
+char* _http_get_header_value(char *header_name)
+{
+    pfwl_string_t header_value;
+    pfwl_field_id_t f = pfwl_get_L7_field_id(header_name);
+    pfwl_http_get_header(&dissection_info, header_name, &header_value);
+    return header_value.value;
+}
+*/
 
 // terminate
-void terminate()
+void _terminate()
 {
-  dpi_terminate(state);
+  pfwl_terminate(state);
+}
+/* ############## ############## ############## ############## ############## ############## */
+
+
+/* ############## NAPI METHODS ############## */
+NAPI_METHOD(init) {
+    int r;
+    r = b_init();
+    NAPI_RETURN_INT32(r);
 }
 
-
-/*** NAPI METHODS ***/
-
-NAPI_METHOD(pfw_init) {
-  int r;
-  r = init();
-  NAPI_RETURN_INT32(r);
+NAPI_METHOD(convert_pcap_dlt) {
+    pfwl_protocol_l2_t plt;
+    NAPI_ARGV(1);
+    NAPI_ARGV_UINT32(dlt, 0);
+    plt = _convert_pcap_dlt(dlt);
+    NAPI_RETURN_UINT32(plt);
 }
 
-
-NAPI_METHOD(pfw_get_protocol_l7) {
-  char *name;
-  NAPI_ARGV(2);
-  NAPI_ARGV_BUFFER(packet, 0);
-  NAPI_ARGV_BUFFER_CAST(struct pcap_pkthdr *, header, 1);
-  name = get_protocol_l7(packet, header);
-  NAPI_RETURN_STRING(name);
+NAPI_METHOD(dissect_from_L2) {
+    pfwl_status_t status;
+    NAPI_ARGV(4);
+    NAPI_ARGV_BUFFER(pkt, 0);  // pkt from L2
+    NAPI_ARGV_UINT32(len, 1);  // len from L2
+    NAPI_ARGV_INT32(time, 2);
+    NAPI_ARGV_INT32(dl, 3);    // pfwl_protocol_l2_t
+    status = _dissect_from_L2(pkt, len, time, dl);
+    NAPI_RETURN_INT32(status);
 }
 
-NAPI_METHOD(pfw_get_protocol_l4) {
-  char *name;
-  NAPI_ARGV(2);
-  NAPI_ARGV_BUFFER(packet, 0);
-  NAPI_ARGV_BUFFER_CAST(struct pcap_pkthdr *, header, 1);
-  name = get_protocol_l4(packet, header);
-  NAPI_RETURN_STRING(name);
+NAPI_METHOD(dissect_from_L3) {
+    pfwl_status_t status;
+    NAPI_ARGV(3);
+    NAPI_ARGV_BUFFER(pkt, 0);  // pkt from L3
+    NAPI_ARGV_UINT32(len, 1);  // len from L3
+    NAPI_ARGV_INT32(time, 2);
+    status = _dissect_from_L3(pkt, len, time);
+    NAPI_RETURN_UINT32(status);
 }
 
-NAPI_METHOD(pfw_get_protocol_pair) {
-  char *res;
-  NAPI_ARGV(2);
-  NAPI_ARGV_BUFFER(packet, 0);
-  NAPI_ARGV_BUFFER_CAST(struct pcap_pkthdr *, header, 1);
-  res = get_protocol_pair(packet, header);
-  NAPI_RETURN_UTF8(res, 2);
+NAPI_METHOD(dissect_from_L4) {
+    pfwl_status_t status;
+    NAPI_ARGV(3);
+    NAPI_ARGV_BUFFER(pkt, 0);  // pkt from L4
+    NAPI_ARGV_UINT32(len, 1);  // len from L4
+    NAPI_ARGV_INT32(time, 2);
+    status = _dissect_from_L4(pkt, len, time);
+    NAPI_RETURN_UINT32(status);
 }
 
+NAPI_METHOD(protocol_L7_enable) {
+    uint8_t status;
+    NAPI_ARGV(1);
+    NAPI_ARGV_UINT32(proto, 0);
+    status = _protocol_L7_enable(proto);
+    NAPI_RETURN_UINT32(status);
+}
 
-NAPI_METHOD(pfw_terminate) {
-  terminate();
+NAPI_METHOD(protocol_L7_disable) {
+    uint8_t status;
+    NAPI_ARGV(1);
+    NAPI_ARGV_UINT32(proto, 0);
+    status = _protocol_L7_disable(proto);
+    NAPI_RETURN_UINT32(status);
+}
+
+NAPI_METHOD(guess_protocol) {
+    uint8_t status;
+    status = _guess_protocol();
+    NAPI_RETURN_UINT32(status);
+}
+
+NAPI_METHOD(get_L7_protocol_name) {
+    char* name;
+    NAPI_ARGV(1);
+    NAPI_ARGV_UINT32(proto, 0);
+    name = _get_L7_protocol_name(proto);
+    NAPI_RETURN_STRING(name);
+}
+
+NAPI_METHOD(get_L7_protocol_id) {
+    uint8_t id;
+    NAPI_ARGV(1);
+    NAPI_ARGV_BUFFER(string, 0);
+    id = _get_L7_protocol_id(string);
+    NAPI_RETURN_UINT32(id);
+}
+
+NAPI_METHOD(get_L7_from_L2) {
+    char *name;
+    NAPI_ARGV(3);
+    NAPI_ARGV_BUFFER(packet, 0);
+    NAPI_ARGV_BUFFER_CAST(struct pcap_pkthdr *, header, 1);
+    NAPI_ARGV_INT32(link_type, 2);
+    name = _get_L7_from_L2(packet, header, link_type);
+    NAPI_RETURN_STRING(name);
+}
+
+NAPI_METHOD(field_add_L7) {
+    uint8_t status;
+    NAPI_ARGV(1);
+    NAPI_ARGV_BUFFER(field, 0);
+    status = _field_add_L7(field);
+    NAPI_RETURN_UINT32(status);
+}
+
+NAPI_METHOD(field_remove_L7) {
+    uint8_t status;
+    NAPI_ARGV(1);
+    NAPI_ARGV_BUFFER(field, 0);
+    status = _field_remove_L7(field);
+    NAPI_RETURN_UINT32(status);
+}
+
+NAPI_METHOD(set_protocol_accuracy_L7) {
+    uint8_t status;
+    NAPI_ARGV(2);
+    NAPI_ARGV_UINT32(proto, 0);
+    NAPI_ARGV_UINT32(accuracy, 1);
+    status = _set_protocol_accuracy_L7(proto, accuracy);
+    NAPI_RETURN_UINT32(status);
+}
+
+NAPI_METHOD(field_present) {
+    int status;
+    NAPI_ARGV(1);
+    NAPI_ARGV_BUFFER(field, 0)
+    status = _field_present(field);
+    NAPI_RETURN_INT32(status);
+}
+
+NAPI_METHOD(field_string_get) {
+    char* string;
+    NAPI_ARGV(1);
+    NAPI_ARGV_BUFFER(field, 0)
+    string = _field_string_get(field);
+    NAPI_RETURN_STRING(string);
+}
+
+NAPI_METHOD(field_number_get) {
+    int num;
+    NAPI_ARGV(1);
+    NAPI_ARGV_BUFFER(field, 0)
+    num = _field_number_get(field);
+    NAPI_RETURN_INT32(num);
+}
+
+/*
+NAPI_METHOD(http_get_header_value) {
+    char* header_value;
+    NAPI_ARGV(1);
+    NAPI_ARGV_BUFFER(h_name, 0);
+    header_value = _http_get_header_value(h_name);
+    NAPI_RETURN_STRING(header_value);
+}
+*/
+
+NAPI_METHOD(terminate) {
+  _terminate();
   return NULL;
 }
-
 
 /* ### FOR TEST ### */
 NAPI_METHOD(test_mul) {
@@ -172,13 +354,31 @@ NAPI_METHOD(test_mul) {
 
   NAPI_RETURN_INT32(number)
 }
+/* ############## ############## ############## */
 
 
+/* ############## EXPORTED FUNCTIONS ############## */
 NAPI_INIT() {
-  NAPI_EXPORT_FUNCTION(pfw_init);
-  NAPI_EXPORT_FUNCTION(pfw_get_protocol_l7);
-  NAPI_EXPORT_FUNCTION(pfw_get_protocol_l4);
-  NAPI_EXPORT_FUNCTION(pfw_get_protocol_pair);
-  NAPI_EXPORT_FUNCTION(pfw_terminate);
+  NAPI_EXPORT_FUNCTION(init);
+  NAPI_EXPORT_FUNCTION(convert_pcap_dlt);
+  NAPI_EXPORT_FUNCTION(dissect_from_L2);
+  NAPI_EXPORT_FUNCTION(dissect_from_L3);
+  NAPI_EXPORT_FUNCTION(dissect_from_L4);
+  NAPI_EXPORT_FUNCTION(protocol_L7_enable);
+  NAPI_EXPORT_FUNCTION(protocol_L7_disable);
+  NAPI_EXPORT_FUNCTION(guess_protocol);
+  NAPI_EXPORT_FUNCTION(get_L7_protocol_name);
+  NAPI_EXPORT_FUNCTION(get_L7_protocol_id);
+  NAPI_EXPORT_FUNCTION(get_L7_from_L2);
+  NAPI_EXPORT_FUNCTION(field_add_L7);
+  NAPI_EXPORT_FUNCTION(field_remove_L7);
+  NAPI_EXPORT_FUNCTION(field_present);
+  NAPI_EXPORT_FUNCTION(set_protocol_accuracy_L7);
+  NAPI_EXPORT_FUNCTION(field_string_get);
+  NAPI_EXPORT_FUNCTION(field_number_get);
+  /*NAPI_EXPORT_FUNCTION(http_get_header_value); */
+  NAPI_EXPORT_FUNCTION(terminate);
+  /* ### FOR TEST ### */
   NAPI_EXPORT_FUNCTION(test_mul);
 }
+/* ############## ############## ############## */
