@@ -5,35 +5,12 @@
 var VERSION = "1.0.0";
 var peafowl = require('../peafowl.js');
 
-var protoL4 = ""
-var protoL7 = ""
-
-/* Packet Stats */
-var packetStats = { bytes: [], count: [] };
-function formatBytes(a,b){if(0==a)return"0 Bytes";var c=1024,d=b||2,e=["Bytes","KB","MB","GB","TB","PB","EB","ZB","YB"],f=Math.floor(Math.log(a)/Math.log(c));return parseFloat((a/Math.pow(c,f)).toFixed(d))+" "+e[f]}
-
-/* PCAP Header  */
-const sharedStructs = require('shared-structs');
-const structs = sharedStructs(`
-      struct pcap {
-		  uint64_t ts_sec;
-		  uint64_t ts_usec;
-		  uint64_t incl_len;
-		  uint64_t orig_len;
-      }
-`);
-
 /* PCAP Parser */
 var pcapp = require('pcap-parser');
 var param = require('param');
 
-if (param("pcap.file")) {
-    var filename = param('pcap.file');
-    var pcap_parser = pcapp.parse(filename);
-} else {
-    console.error("usage: --pcap.file /path/to/file.pcap");
-    process.exit();
-}
+var protoL4 = ""
+var protoL7 = ""
 
 /* APP */
 console.log("Peafowl Node v"+VERSION);
@@ -52,87 +29,102 @@ protos.forEach(function(proto){
   });
 });
 
-// L2 type
-var LinkType = -1;
-/*
-var pcap = require('pcap');
-var pcap_session = pcap.createOfflineSession(filename, "");
+/* Packet Stats */
+var packetStats = { bytes: [], count: [] };
+function formatBytes(a,b){if(0==a)return"0 Bytes";var c=1024,d=b||2,e=["Bytes","KB","MB","GB","TB","PB","EB","ZB","YB"],f=Math.floor(Math.log(a)/Math.log(c));return parseFloat((a/Math.pow(c,f)).toFixed(d))+" "+e[f]}
 
-pcap_session.on('packet', function (raw_packet) {
-    var packet = pcap.decode.packet(raw_packet);
-    LinkType = packet.link_type;
-    switch (LinkType) {
-    case "LINKTYPE_ETHERNET":
-        LinkType = 1;
-        break;
-    case "LINKTYPE_NULL":
-        LinkType = 0;
-        break;
-    case "LINKTYPE_RAW":
-        LinkType = 101;
-        break;
-    case "LINKTYPE_IEEE802_11_RADIO":
-        LinkType = 127;
-        break;
-    case "LINKTYPE_LINUX_SLL":
-        LinkType = 113;
-    default:
-        console.log("Datalink type not supported");
-    }
+/* PCAP Header  */
+const sharedStructs = require('shared-structs');
+const structs = sharedStructs(`
+      struct pcap {
+		  uint64_t ts_sec;
+		  uint64_t ts_usec;
+		  uint64_t incl_len;
+		  uint64_t orig_len;
+      }
+`);
+
+
+var pcaps = param('pcap');
+if (pcaps.length < 1) process.exit();
+/*
+pcaps.forEach(function(pcap){
+	if (pcap.file) {
+	    console.log('Loading PCAP..',pcap.file);
+	    var filename = pcap.file;
+	    pcap_parser = pcapp.parse(filename);
+
+	} else {
+	    console.error("file not found:",filename);
+	}
 });
 */
 
-pcap_parser.on('globalHeader', function (globalHeader) {
-	LinkType = globalHeader.linkLayerType;
-	console.log('Set LinkType',LinkType);
-})
+async function doPcaps () {
+  for (const pcap of pcaps) {
 
-pcap_parser.on('packet', function (raw_packet) {
-    counter++;
+    	var pcap_parser = await pcapp.parse(pcap.file);
+	// L2 type
+	var LinkType = -1;
+	pcap_parser.on('globalHeader', function (globalHeader) {
+		LinkType = globalHeader.linkLayerType;
+		console.log('Set LinkType',LinkType);
+	})
 
-    var header = raw_packet.header;
-    // Build PCAP Hdr Struct
-    var newHdr = structs.pcap();
-    newHdr.ts_sec = header.timestampSeconds;
-    newHdr.ts_usec = header.timestampMicroseconds;
-    newHdr.incl_len = header.capturedLength;
-    newHdr.orig_len = header.originalLength;
+	pcap_parser.on('packet', function (raw_packet) {
+	    counter++;
 
-    // DISSECT AND GET PROTOCOL
-    protoL7 = new Buffer.from(peafowl.get_L7_from_L2( raw_packet.data, newHdr.rawBuffer, LinkType ));
+		if (!raw_packet) return;
 
-    // From object to String
-    protoL7 = protoL7.toString();
-    console.log("L7: ", protoL7);
-    var tmpStats = packetStats.bytes[ protoL7 ];
-    if (!tmpStats) {
-        packetStats.bytes[ protoL7 ] = raw_packet.data.length;
-        packetStats.count[ protoL7 ] = 1;
-    } else {
-        packetStats.bytes[ protoL7 ] += raw_packet.data.length;
-        packetStats.count[ protoL7 ] += 1;
-    }
+	    var header = raw_packet.header;
+	    // Build PCAP Hdr Struct
+	    var newHdr = structs.pcap();
+	    newHdr.ts_sec = header.timestampSeconds;
+	    newHdr.ts_usec = header.timestampMicroseconds;
+	    newHdr.incl_len = header.capturedLength;
+	    newHdr.orig_len = header.originalLength;
 
-    // Add http header extraction from config file
-    protos.forEach(function(proto){
-      if(proto.name == protoL7){
-	 proto.extract.forEach(function(rule){
-	       var buf = Buffer.from(rule);
-	       if (peafowl.field_present(buf) && proto.max > 0) {
-	          var HttpBody = peafowl.field_string_get(buf);
-	          console.log('EXTRACT:', buf.toString(), HttpBody.toString());
-		  proto.max--;
-	       }
-	 });
-      }
-    });
+	    // DISSECT AND GET PROTOCOL
+	    protoL7 = new Buffer.from(peafowl.get_L7_from_L2( raw_packet.data, newHdr.rawBuffer, LinkType ));
 
-});
+	    // From object to String
+	    protoL7 = protoL7.toString();
+	    console.log("L7: ", protoL7);
+	    var tmpStats = packetStats.bytes[ protoL7 ];
+	    if (!tmpStats) {
+	        packetStats.bytes[ protoL7 ] = raw_packet.data.length;
+	        packetStats.count[ protoL7 ] = 1;
+	    } else {
+	        packetStats.bytes[ protoL7 ] += raw_packet.data.length;
+	        packetStats.count[ protoL7 ] += 1;
+	    }
 
-pcap_parser.on('end', function () {
-    console.log('Terminating...');
-    peafowl.terminate();
-});
+	    // Add header extraction from config file
+	    var xprotos = JSON.parse(JSON.stringify(protos));;
+	    xprotos.forEach(function(proto){
+	      if(proto.name == protoL7){
+		 proto.extract.forEach(function(rule){
+		       var buf = Buffer.from(rule);
+		       if (peafowl.field_present(buf) && proto.max > 0) {
+		          var Body = peafowl.field_string_get(buf);
+		          console.log('EXTRACT:', buf.toString(), Body.toString());
+			  proto.max--;
+		       }
+		 });
+	      }
+	    });
+	});
+
+	pcap_parser.on('end', function () {
+	    console.log('Terminating...');
+	    // peafowl.terminate();
+	});
+
+        console.log('Next...');
+  }
+}
+
+doPcaps();
 
 var exit = false;
 process.on('exit', function() {
