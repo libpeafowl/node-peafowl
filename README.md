@@ -45,6 +45,10 @@ See our fully working [Example](https://github.com/lmangani/node-peafowl/tree/ma
 ### Test
 You can test our example by running ```npm test```
 
+### Todo
+* Implement int64 response from library
+* Add more test cases
+
 <br/>
 <br/>
 
