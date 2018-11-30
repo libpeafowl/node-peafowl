@@ -1,7 +1,5 @@
 var bindings = require('node-gyp-build')(__dirname);
 
-console.log(bindings.test_mul(42));
-
 module.exports = {
     times_two: bindings.test_mul, // TEST FUNC
     init: bindings.init,
