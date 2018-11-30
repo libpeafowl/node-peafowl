@@ -23,6 +23,11 @@ The install script will automatically attempt compiling peafowl and building nod
 npm install
 ```
 
+In case of issues building the library, run using `--unsafe-perm`:
+```
+npm install --unsafe-perm
+```
+
 ### Usage
 ```javascript
 /* INITIALIZE LIBRARY */
