@@ -9,5 +9,6 @@
     ],
     "sources": [ "./peafowl.c" ],
     "libraries": ["-Wl,-rpath,<(module_root_dir)/peafowl_lib/build/src/ -L<(module_root_dir)/peafowl_lib/build/src/ -lpeafowl"]
-  }]
+  }],
+  "build_v8_with_gn%": "false"
 }
