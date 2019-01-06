@@ -8,7 +8,7 @@ if [ ! -d "peafowl_lib" ]; then
   cd peafowl_lib
   echo "Getting tag " $TAG
   git checkout master
-  git checkout 9dd7812979be7f8dc43927df518a5b393e29bf6b
+  git checkout 1069226f19dfb722f1cc4ac9f86ad7b888e443de
   echo "Compiling Peafowl..."
   mkdir build && cd build
   cmake ../ && make && cd ../../
