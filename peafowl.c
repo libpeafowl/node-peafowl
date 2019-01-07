@@ -117,17 +117,19 @@ char* _get_L7_from_L2(char* packet, struct pcap_pkthdr* header, int link_type)
 
 
 // enables the extraction of a specific L7 field for a given protocol
-uint8_t _field_add_L7(pfwl_protocol_l7_t protocol, char* field)
+uint8_t _field_add_L7(char* protocol, char* field)
 {
-    pfwl_field_id_t f = pfwl_get_L7_field_id(protocol, field);
+    pfwl_protocol_l7_t protocol_id = pfwl_get_L7_protocol_id(protocol);
+    pfwl_field_id_t f = pfwl_get_L7_field_id(protocol_id, field);
     return pfwl_field_add_L7(state, f);
 }
 
 
 // disables the extraction of a specific L7 field for a given protocol
-uint8_t _field_remove_L7(pfwl_protocol_l7_t protocol, char* field)
+uint8_t _field_remove_L7(char* protocol, char* field)
 {
-    pfwl_field_id_t f = pfwl_get_L7_field_id(protocol, field);
+    pfwl_protocol_l7_t protocol_id = pfwl_get_L7_protocol_id(protocol);
+    pfwl_field_id_t f = pfwl_get_L7_field_id(protocol_id, field);
     return pfwl_field_remove_L7(state, f);
 }
 
@@ -141,28 +143,31 @@ uint8_t _set_protocol_accuracy_L7(pfwl_protocol_l7_t protocol,
 
 
 // check if the field is present or not
-int _field_present(pfwl_protocol_l7_t protocol, char* field)
+int _field_present(char* protocol, char* field)
 {
-    pfwl_field_id_t f = pfwl_get_L7_field_id(protocol, field);
+    pfwl_protocol_l7_t protocol_id = pfwl_get_L7_protocol_id(protocol);
+    pfwl_field_id_t f = pfwl_get_L7_field_id(protocol_id, field);
     return dissection_info.l7.protocol_fields[f].present;
 }
 
 
 // extracts a specific string field from a list of fields (ret = 0 string set)
-char* _field_string_get(pfwl_protocol_l7_t protocol, char* field)
+char* _field_string_get(char* protocol, char* field)
 {
     pfwl_string_t string;
-    pfwl_field_id_t f = pfwl_get_L7_field_id(protocol, field);
+    pfwl_protocol_l7_t protocol_id = pfwl_get_L7_protocol_id(protocol);
+    pfwl_field_id_t f = pfwl_get_L7_field_id(protocol_id, field);
     pfwl_field_string_get(dissection_info.l7.protocol_fields, f, &string);
     return string.value;
 }
 
 
 // extracts a specific numeric field from a list of fields (ret = 0 number set)
-int _field_number_get(pfwl_protocol_l7_t protocol, char* field)
+int _field_number_get(char* protocol, char* field)
 {
     int64_t num;
-    pfwl_field_id_t f = pfwl_get_L7_field_id(protocol, field);
+    pfwl_protocol_l7_t protocol_id = pfwl_get_L7_protocol_id(protocol);
+    pfwl_field_id_t f = pfwl_get_L7_field_id(protocol_id, field);
     pfwl_field_number_get(dissection_info.l7.protocol_fields, f, &num);
     return num;
 }
@@ -284,7 +289,7 @@ NAPI_METHOD(get_L7_from_L2) {
 NAPI_METHOD(field_add_L7) {
     uint8_t status;
     NAPI_ARGV(2);
-    NAPI_ARGV_UINT32(proto, 0);
+    NAPI_ARGV_BUFFER(proto, 0);
     NAPI_ARGV_BUFFER(field, 1);
     status = _field_add_L7(proto, field);
     NAPI_RETURN_UINT32(status);
@@ -293,9 +298,9 @@ NAPI_METHOD(field_add_L7) {
 NAPI_METHOD(field_remove_L7) {
     uint8_t status;
     NAPI_ARGV(2);
-    NAPI_ARGV_UINT32(proto, 0);
+    NAPI_ARGV_BUFFER(proto, 0);
     NAPI_ARGV_BUFFER(field, 1);
-    status = _field_remove_L7(field);
+    status = _field_remove_L7(proto, field);
     NAPI_RETURN_UINT32(status);
 }
 
@@ -311,27 +316,27 @@ NAPI_METHOD(set_protocol_accuracy_L7) {
 NAPI_METHOD(field_present) {
     int status;
     NAPI_ARGV(2);
-    NAPI_ARGV_UINT32(proto, 0);
+    NAPI_ARGV_BUFFER(proto, 0);
     NAPI_ARGV_BUFFER(field, 1);
-    status = _field_present(field);
+    status = _field_present(proto, field);
     NAPI_RETURN_INT32(status);
 }
 
 NAPI_METHOD(field_string_get) {
     char* string;
     NAPI_ARGV(2);
-    NAPI_ARGV_UINT32(proto, 0);
+    NAPI_ARGV_BUFFER(proto, 0);
     NAPI_ARGV_BUFFER(field, 1);
-    string = _field_string_get(field);
+    string = _field_string_get(proto, field);
     NAPI_RETURN_STRING(string);
 }
 
 NAPI_METHOD(field_number_get) {
     int num;
     NAPI_ARGV(2);
-    NAPI_ARGV_UINT32(proto, 0);
+    NAPI_ARGV_BUFFER(proto, 0);
     NAPI_ARGV_BUFFER(field, 1);
-    num = _field_number_get(field);
+    num = _field_number_get(proto, field);
     NAPI_RETURN_INT32(num);
 }
 

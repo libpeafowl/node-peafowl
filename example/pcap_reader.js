@@ -22,29 +22,32 @@ peafowl.init();
 /* EXTRACTION SETUP */
 var pcaps = param('pcap');
 pcaps.forEach(function(file){
-  if (!file.enable) return;
-  file.protocols.forEach(function(proto){
-    if(proto.rules){
-    	proto.rules.forEach(function(proto){
-	  console.log('Extraction rule for:',proto);
-	  var buf = Buffer.from(proto);
-	  peafowl.field_add_L7(buf);
-    	});
+    if (!file.enable) return;
+    file.protocols.forEach(function(proto){
+        if(proto.rules){
+    	    proto.rules.forEach(function(protoObj){
+	            console.log('Extraction rule for:', protoObj);
+                var buf = Buffer.from(protoObj);
+                var protoName = Buffer.from(proto.name, 'utf-8');
+                peafowl.field_add_L7(protoName, buf);
+    	    });
 
-    } else if (proto.extract_int){
-    	proto.extract_int.forEach(function(proto){
-	  console.log('Extraction rule for:',proto);
-	  var buf = Buffer.from(proto);
-	  peafowl.field_add_L7(buf);
-    	});
-    } else if (proto.extract_str){
-    	proto.extract_str.forEach(function(proto){
-	  console.log('Extraction rule for:',proto);
-	  var buf = Buffer.from(proto);
-	  peafowl.field_add_L7(buf);
-    	});
-    }
-  });
+        } else if (proto.extract_int){
+    	    proto.extract_int.forEach(function(protoInt){
+	            console.log('Extraction rule for:', protoInt);
+	            var buf = Buffer.from(protoInt);
+                var protoName = Buffer.from(proto.name, 'utf-8');
+                peafowl.field_add_L7(protoName, buf);
+    	    });
+        } else if (proto.extract_str){
+    	    proto.extract_str.forEach(function(protoStr){
+	            console.log('Extraction rule for:', protoStr);
+	            var buf = Buffer.from(protoStr);
+                var protoName = Buffer.from(proto.name, 'utf-8');
+                peafowl.field_add_L7(protoName, buf);
+    	    });
+        }
+    });
 });
 
 /* Packet Stats */
@@ -111,30 +114,32 @@ async function doPcaps () {
 	    // Add header extraction from config file
 	    // var xprotos = JSON.parse(JSON.stringify(protos));;
 	    pcap.protocols.forEach(function(proto){
-	      if(proto.name == protoL7){
-		if(proto.extract_str){
-		 proto.extract_str.forEach(function(rule){
-		       var buf = Buffer.from(rule);
-		       //console.log('TRY EXTRACT STR',rule,peafowl.field_present(buf))
-		       if (peafowl.field_present(buf) && proto.max >0 ) {
-		          var Body = peafowl.field_string_get(buf);
-		          console.log('EXTRACT STR:',proto.max,'CONTENT:', buf.toString(), Body.toString());
-			  proto.max--;
-		       }
-		 });
-		} else if(proto.extract_int){
-		 proto.extract_int.forEach(function(rule){
-		       var buf = Buffer.from(rule);
-		       //console.log('TRY EXTRACT NUM',rule,peafowl.field_present(buf))
-		       if (peafowl.field_present(buf) && proto.max >0 ) {
-		          var Body = peafowl.field_number_get(buf);
-		          console.log('EXTRACT NUM:',proto.max,'CONTENT:', buf.toString(), Body.toString());
-			  proto.max--;
-		       }
-		 });
-		}
-
-	      }
+            console.log('XXXX = ', typeof proto.name);
+	        if(proto.name == protoL7){
+		        if(proto.extract_str){
+		            proto.extract_str.forEach(function(rule){
+                        var protoName = Buffer.from(protoL7, 'utf-8');
+		                var buf = Buffer.from(rule);
+		                //console.log('TRY EXTRACT STR',rule,peafowl.field_present(buf))
+		                if (peafowl.field_present(protoName, buf) && proto.max >0 ) {
+		                    var Body = peafowl.field_string_get(protoName, buf);
+		                    console.log('EXTRACT STR:', proto.max,'CONTENT:', buf.toString(), Body.toString());
+			                proto.max--;
+		                }
+		            });
+		        } else if(proto.extract_int){
+		            proto.extract_int.forEach(function(rule){
+                        var protoName = Buffer.from(protoL7, 'utf-8');
+		                var buf = Buffer.from(rule);
+		                //console.log('TRY EXTRACT NUM',rule,peafowl.field_present(buf))
+		                if (peafowl.field_present(protoName, buf) && proto.max >0 ) {
+		                    var Body = peafowl.field_number_get(protoName, buf);
+		                    console.log('EXTRACT NUM:', proto.max,'CONTENT:', buf.toString(), Body.toString());
+			                proto.max--;
+		                }
+		            });
+		        }
+	        }
 	    });
 	});
 
