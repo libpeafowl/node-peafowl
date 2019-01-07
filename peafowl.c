@@ -58,7 +58,7 @@ pfwl_status_t _dissect_from_L3(char* packet_fromL3, uint32_t length_fromL3,
 pfwl_status_t _dissect_from_L4(char* packet_fromL4, uint32_t length_fromL4,
                                uint32_t timestamp)
 {
-    return pfwl_dissect_from_L3(state, (const u_char*) packet_fromL4,
+    return pfwl_dissect_from_L4(state, (const u_char*) packet_fromL4,
                                 length_fromL4, time(NULL), &dissection_info);
 }
 
