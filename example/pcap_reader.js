@@ -114,7 +114,7 @@ async function doPcaps () {
 	    // Add header extraction from config file
 	    // var xprotos = JSON.parse(JSON.stringify(protos));;
 	    pcap.protocols.forEach(function(proto){
-            console.log('XXXX = ', typeof proto.name);
+            ///console.log('XXXX = ', typeof proto.name);
 	        if(proto.name == protoL7){
 		        if(proto.extract_str){
 		            proto.extract_str.forEach(function(rule){
