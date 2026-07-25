@@ -214,6 +214,12 @@ NAPI_METHOD(dissect_from_L2) {
     NAPI_ARGV_UINT32(len, 1);  // len from L2
     NAPI_ARGV_INT32(time, 2);
     NAPI_ARGV_INT32(dl, 3);    // pfwl_protocol_l2_t
+    // len is caller-supplied; reject values larger than the packet Buffer so the
+    // dissector cannot read past the end of pkt.
+    if (len > pkt_len) {
+        napi_throw_error(env, "ERANGE", "len exceeds packet buffer length");
+        return NULL;
+    }
     status = _dissect_from_L2(pkt, len, time, dl);
     NAPI_RETURN_INT32(status);
 }
@@ -224,6 +230,12 @@ NAPI_METHOD(dissect_from_L3) {
     NAPI_ARGV_BUFFER(pkt, 0);  // pkt from L3
     NAPI_ARGV_UINT32(len, 1);  // len from L3
     NAPI_ARGV_INT32(time, 2);
+    // len is caller-supplied; reject values larger than the packet Buffer so the
+    // dissector cannot read past the end of pkt.
+    if (len > pkt_len) {
+        napi_throw_error(env, "ERANGE", "len exceeds packet buffer length");
+        return NULL;
+    }
     status = _dissect_from_L3(pkt, len, time);
     NAPI_RETURN_UINT32(status);
 }
@@ -234,6 +246,12 @@ NAPI_METHOD(dissect_from_L4) {
     NAPI_ARGV_BUFFER(pkt, 0);  // pkt from L4
     NAPI_ARGV_UINT32(len, 1);  // len from L4
     NAPI_ARGV_INT32(time, 2);
+    // len is caller-supplied; reject values larger than the packet Buffer so the
+    // dissector cannot read past the end of pkt.
+    if (len > pkt_len) {
+        napi_throw_error(env, "ERANGE", "len exceeds packet buffer length");
+        return NULL;
+    }
     status = _dissect_from_L4(pkt, len, time);
     NAPI_RETURN_UINT32(status);
 }
