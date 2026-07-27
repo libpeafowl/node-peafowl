@@ -300,6 +300,17 @@ NAPI_METHOD(get_L7_from_L2) {
     NAPI_ARGV_BUFFER(packet, 0);
     NAPI_ARGV_BUFFER_CAST(struct pcap_pkthdr *, header, 1);
     NAPI_ARGV_INT32(link_type, 2);
+    // Validate the header Buffer holds a full struct pcap_pkthdr before
+    // dereferencing it, and that caplen does not exceed the real packet Buffer,
+    // otherwise header->caplen / the dissection would read past the buffers.
+    if (header_len < sizeof(struct pcap_pkthdr)) {
+        napi_throw_error(env, "ERANGE", "header buffer smaller than struct pcap_pkthdr");
+        return NULL;
+    }
+    if (header->caplen > packet_len) {
+        napi_throw_error(env, "ERANGE", "header->caplen exceeds packet buffer length");
+        return NULL;
+    }
     name = _get_L7_from_L2(packet, header, link_type);
     NAPI_RETURN_STRING(name);
 }
